@@ -77,14 +77,7 @@ function distractors(correct,field){let source=drugs.filter(d=>d[field]&&d[field
 const distractorCache=new Map();
 const choiceCacheKey=function(correct,field){return field+"|"+targetKey(correct)};
 const distractorCacheKey=function(correct,field){return choiceCacheKey(correct,field)};
-const choicesFor=function(a,b){
-  const key=choiceCacheKey(a,b);
-  const cached=distractorCache.get(key);
-  const pool=cached ? [...cached] : distractors(a,b);
-  if(!cached)distractorCache.set(key,[...pool]);
-  const vals=[a,...pool],seen=new Set();
-  return vals.filter(x=>{const k=targetKey(x);if(seen.has(k))return false;seen.add(k);return true}).sort(()=>Math.random()-.5);
-}
+const choicesFor=function(a,b){return [a].concat(distractors(a,b)).sort(()=>Math.random()-.5);}
 function prepareLearningData(){
   if(backgroundPrepStarted)return;
   backgroundPrepStarted=true;
