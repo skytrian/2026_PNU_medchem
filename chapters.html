@@ -77,30 +77,22 @@ function renderStages(){if(!currentGroup){show("home");return}let masteredCount=
 const similarGroups=[{title:"ACE inhibitor",names:["Captopril","Enalapril","Lisinopril","Fosinopril"]},{title:"ARB",names:["Losartan","Telmisartan","Candesartan","Olmesartan"]},{title:"Thiazide계 이뇨제",names:["Hydrochlorothiazide","Trichlormethiazide"]},{title:"Loop diuretic",names:["Furosemide","Bumetanide","Ethacrynic acid"]},{title:"Ca2+ channel blocker",names:["Verapamil","Nifedipine","Diltiazem","Amlodipine"]},{title:"Statin",names:["Simvastatin","Pravastatin","Atorvastatin","Rosuvastatin"]},{title:"Sulfonylurea",names:["Glipizide","Tolbutamide","Glimepiride","Glibenclamide"]},{title:"DPP-4 inhibitor",names:["Sitagliptin","Saxagliptin","Vildagliptin"]},{title:"Glucocorticoid",names:["Prednisolone","Dexamethasone","Triamcinolone acetonide"]},{title:"SERM",names:["Tamoxifen","Raloxifene"]},{title:"Aromatase inhibitor",names:["Anastrozole","Letrozole"]},{title:"Bisphosphonate",names:["Etidronate","Alendronate"]},{title:"NSAID",names:["Ibuprofen","Naproxen","Diclofenac","Mefenamic acid"]}];function similarGroupFor(n){return similarGroups.find(g=>g.names.includes(n))}function similarCandidates(n){const g=similarGroupFor(n);return g?[...g.names].sort(()=>Math.random()-.5):[n,...drugs.map(d=>d[0]).filter(x=>x!==n).sort(()=>Math.random()-.5).slice(0,3)]}function structureChoiceCard(name){return '<button type="button" class="structure-choice" data-choice="'+escapeAttr(name)+'"><span class="structure-choice-img"><img src="'+img(name)+'" alt="구조"></span></button>'}function startStage(n){currentStage=n;let names=[...currentGroup.names].filter(n=>currentStage!==6||stageEligible(n,6));names.sort(()=>Math.random()-.5);pool=names;qi=0;answered=false;history.pushState({screen:"quiz",group:currentGroup.id,stage:n},"","#"+currentGroup.id+"-stage-"+n);show("quiz");drawQuestion()}
 const useConflictTerms=["고혈압","심부전","협심증","부종","당뇨","고지혈증","중성지방혈증","혈전","부정맥","빈맥","녹내장","고산병","비만","탈모","항응고","항혈소판","골다공증","갑상선","통증","발열","관절염","염증","유방암","전립선","폐부종","심혈관","신장 보호","신장보호"];function useConflict(a,b){const aa=normalizeText(a),bb=normalizeText(b);if(aa===bb)return true;return useConflictTerms.some(k=>{const x=normalizeText(k);return aa.includes(x)&&bb.includes(x)})}
 function distractors(correct,field){let source=drugs.filter(d=>d[field]&&d[field]!==correct);if(field===4){const cd=drugs.find(d=>d[4]===correct),base=source.filter(d=>d[1]!==cd?.[1]&&!useConflict(correct,d[4])),seen=new Set();let pool=base.map(d=>d[4]).filter(v=>{const k=targetKey(v);if(seen.has(k))return false;seen.add(k);return true});if(pool.length<3){const fallback=source.filter(d=>d[1]!==cd?.[1]&&!useConflict(correct,d[4])&&targetKey(d[4])!==targetKey(correct)).map(d=>d[4]);for(const v of fallback){const k=targetKey(v);if(!seen.has(k)){seen.add(k);pool.push(v)}}}return pool.sort(()=>Math.random()-.5).slice(0,3)}let vals=source.map(d=>d[field]),seen=new Set([targetKey(correct)]);vals=vals.filter(x=>{let k=targetKey(x);if(seen.has(k))return false;seen.add(k);return true});return vals.sort(()=>Math.random()-.5).slice(0,3)}
-const choiceCache=new Map();function choiceCacheKey(correct,field){return field+"|"+targetKey(correct)}function choicesFor(correct,field){const key=choiceCacheKey(correct,field);if(choiceCache.has(key))return [...choiceCache.get(key)];let a=[correct,...distractors(correct,field)],seen=new Set();a=a.filter(x=>{let k=targetKey(x);if(seen.has(k))return false;seen.add(k);return true});a.sort(()=>Math.random()-.5);choiceCache.set(key,a);return [...a]}
+const distractorCache=new Map();function choiceCacheKey(correct,field){return field+"|"+targetKey(correct)}function distractorCacheKey(correct,field){return choiceCacheKey(correct,field)}function choicesFor(correct,field){const key=choiceCacheKey(correct,field),cached=distractorCache.get(key);let pool=cached?[...cached]:distractors(correct,field),a=[correct,...pool],seen=new Set();a=a.filter(x=>{let k=targetKey(x);if(seen.has(k))return false;seen.add(k);return true});return a.sort(()=>Math.random()-.5)}
 let learningDataReady=false;
 function prepareLearningData(){
- const jobs=[];
- drugs.forEach(d=>[0,2,3,4].forEach(f=>jobs.push([d[f],f])));
+ const jobs=[];drugs.forEach(d=>[0,2,3,4].forEach(f=>jobs.push([d[f],f])));
  let done=0,total=jobs.length;
  const title=document.getElementById("dataLoadTitle"),status=document.getElementById("dataLoadStatus"),bar=document.getElementById("dataLoadBar");
- const tick=()=>{
-   const end=Math.min(done+4,total);
-   while(done<end){const [correct,field]=jobs[done];choicesFor(correct,field);done++}
-   const pct=Math.round(done/total*100);
-   if(bar)bar.style.width=pct+"%";
-   if(status)status.innerHTML="학습 데이터를 준비하고 있습니다. <b>"+pct+"%</b>";
-   if(done<total){setTimeout(tick,0);return}
-   learningDataReady=true;
-   if(title)title.textContent="Chapter 목록을 불러왔습니다.";
-   if(status)status.innerHTML="학습 데이터 준비 완료 · <b>100%</b>";
-   if(bar)bar.style.width="100%";
-   renderChapters();
-   renderFlashcards();
-   renderEncyclopedia();
-   renderStarred();
+ const update=()=>{const pct=Math.round(done/total*100);if(bar)bar.style.width=pct+"%";if(status)status.innerHTML="학습 데이터를 준비하고 있습니다. <b>"+pct+"%</b>";};
+ const tick=deadline=>{
+   const end=deadline?deadline.timeRemaining():8;
+   const started=performance.now();
+   while(done<total && (deadline?deadline.timeRemaining()>1:performance.now()-started<end)){const [correct,field]=jobs[done],key=distractorCacheKey(correct,field);if(!distractorCache.has(key))distractorCache.set(key,distractors(correct,field));done++}
+   update();
+   if(done<total){(window.requestIdleCallback||function(cb){setTimeout(()=>cb(null),0)})(tick)}
+   else{learningDataReady=true;if(title)title.textContent="Chapter 목록을 불러왔습니다.";if(status)status.innerHTML="학습 데이터 준비 완료 · <b>100%</b>";if(bar)bar.style.width="100%";}
  };
- tick();
+ update();(window.requestIdleCallback||function(cb){setTimeout(()=>cb(null),0)})(tick);
 }
 function bindChoiceButtons(correct){document.querySelectorAll("#quizArea .choice-btn").forEach(btn=>{btn.addEventListener("click",()=>answerChoice(btn.dataset.choice,correct));});}
 function drawQuestion(){
@@ -265,5 +257,5 @@ function openReview(n){currentGroup=groups.find(g=>g.names.includes(n));currentS
 let egg=0;function eggClick(){document.getElementById("modal").classList.add("show")}function closeEgg(){document.getElementById("modal").classList.remove("show")}
 function validateTargetOptions(){const vals=drugs.map(d=>d[2]);const dup=vals.filter((v,i,a)=>a.findIndex(x=>targetKey(x)===targetKey(v))!==i);if(dup.length)console.warn("약물표적 중복 표현이 정규화되지 않았습니다.",[...new Set(dup)]);return !dup.length}
 function validateQuestionData(){const m=new Map(drugs.map(d=>[d[0],d]));const e=[];groups.forEach(g=>g.names.forEach(n=>{const d=m.get(n);if(!d)e.push(g.id+" · "+n+" 데이터 없음");else if(d.length<5)e.push(n+" 데이터 필드 부족")}));if(e.length)console.error("학습 데이터 검증 실패",e);return !e.length}
-function validateChapterGroups(){const a=groups.find(g=>g.id==="26A")?.names||[],b=groups.find(g=>g.id==="26B")?.names||[],overlap=a.filter(n=>b.includes(n));if(overlap.length)throw new Error("Chapter 26A/26B overlap: "+overlap.join(", "));groups.forEach(g=>{if(new Set(g.names).size!==g.names.length)throw new Error("Duplicate drug in "+g.id)});return true}validateChapterGroups();validateQuestionData();validateTargetOptions();window.onpopstate=()=>{show("home")};prepareLearningData();
+function validateChapterGroups(){const a=groups.find(g=>g.id==="26A")?.names||[],b=groups.find(g=>g.id==="26B")?.names||[],overlap=a.filter(n=>b.includes(n));if(overlap.length)throw new Error("Chapter 26A/26B overlap: "+overlap.join(", "));groups.forEach(g=>{if(new Set(g.names).size!==g.names.length)throw new Error("Duplicate drug in "+g.id)});return true}validateChapterGroups();validateQuestionData();validateTargetOptions();window.onpopstate=()=>{show("home")};renderChapters();renderFlashcards();renderEncyclopedia();renderStarred();prepareLearningData();
 </script></body></html>
