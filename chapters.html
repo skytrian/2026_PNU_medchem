@@ -53,7 +53,7 @@ function isSaved(name,stage){return saved.some(x=>x.name===name&&x.stage===stage
 function toggleSaved(name,stage){let i=saved.findIndex(x=>x.name===name&&x.stage===stage);if(i>=0)saved.splice(i,1);else saved.push({name,stage,savedAt:Date.now()});saveSaved();renderSaved()}
 function rec(name){return state[name]||{seen:0,correct:0,wrong:0,stage:{}}}
 const imageAliases={"Etidronate":"Etidronic acid","Trichlormethiazide":"Trichloromethiazide"};
-function img(n){const q=imageAliases[n]||n;return "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"+encodeURIComponent(q)+"/record/PNG?record_type=2d&image_size=large"}
+function img(n){const q=imageAliases[n]||n;return "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"+encodeURIComponent(q)+"/PNG?image_size=300x300"}
 function info(n){return drugs.find(d=>d[0]===n)}
 function goHome(){history.pushState({screen:"home"},"","#home");show("home")}
 function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");if(id==="home")renderChapters();if(id==="stages")renderStages();if(id==="bundle")renderBundle();if(id==="review")renderReview();if(id==="saved")renderSaved();if(id==="flashcards")renderFlashcards();if(id==="encyclopedia")renderEncyclopedia();window.scrollTo({top:0,behavior:"smooth"})}
@@ -89,12 +89,12 @@ correct=d[4];let cs=choicesFor(correct,4);
 html='<div class="prompt">'+n+'</div><p class="muted">대표 용도를 선택하세요.</p><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+x+'</button>').join("")+'</div><div id="feedback"></div>';
 }else{
 correct=n;let others=drugs.filter(x=>x[0]!==n).sort(()=>Math.random()-.5).slice(0,3);
-let options=[{name:n,desc:d[2]+" · "+d[3]+" · "+d[4]}].concat(others.map(x=>({name:x[0],desc:x[2]+" · "+x[3]+" · "+x[4]}))).sort(()=>Math.random()-.5);
-html='<div class="prompt">다음 설명에 해당하는 약물을 고르세요.</div><p class="muted">표적·작용양식·대표 용도를 종합하여 가장 정확한 조합을 선택하세요.</p><div class="choices">'+options.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x.name)+'"><b>'+x.name+'</b><br><span class="small">'+escapeAttr(x.desc)+'</span></button>').join("")+'</div><div id="feedback"></div>';
+let options=[n,...others.map(x=>x[0])].sort(()=>Math.random()-.5);
+html='<div class="prompt">다음 약물의 핵심 정보를 보고 약물을 고르세요.</div><div class="card" style="margin:12px 0"><p><b>약물표적</b> · '+escapeHtml(d[2])+'</p><p><b>작용양식</b> · '+escapeHtml(d[3])+'</p><p><b>대표 용도</b> · '+escapeHtml(d[4])+'</p></div><div class="choices">'+options.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div><div id="feedback"></div>';
 }
-q.innerHTML=html;bindChoiceButtons(correct);
+q.innerHTML=html;q.querySelectorAll("img").forEach(el=>el.addEventListener("error",()=>{el.style.display="none";if(!el.parentElement.querySelector(".image-error")){const p=document.createElement("p");p.className="muted image-error";p.textContent="구조 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";el.parentElement.appendChild(p)}}));bindChoiceButtons(correct);
 }
-function escapeAttr(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function escapeAttr(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");} function escapeHtml(s){return escapeAttr(s);}
 function normalizeText(v){return String(v||"").toLowerCase().replace(/[\s\-_/.,;:()\[\]{}→↑↓+]/g,"").replace(/α/g,"alpha").replace(/β/g,"beta").replace(/γ/g,"gamma").replace(/μ/g,"u");}
 function record(ok){let n=pool[qi],r=rec(n);r.seen=(r.seen||0)+1;r.correct=(r.correct||0)+(ok?1:0);r.wrong=(r.wrong||0)+(ok?0:1);r.stage[currentStage]=r.stage[currentStage]||{correct:0,wrong:0};r.stage[currentStage].correct+=(ok?1:0);r.stage[currentStage].wrong+=(ok?0:1);state[n]=r;save();}
 function resetProgress(){if(!confirm("모든 학습 기록과 저장소를 초기화할까요?\n이 작업은 되돌릴 수 없습니다."))return;localStorage.removeItem(key);localStorage.removeItem("pharmSavedRecallV1");localStorage.removeItem("pharmChapterRecallV3");state={};saved=[];currentStage=1;qi=0;answered=false;renderChapters();renderSaved();renderStages();alert("진행률과 저장소가 초기화되었습니다.");}
@@ -146,5 +146,6 @@ function renderReview(){let rows=drugs.filter(d=>rec(d[0]).wrong>0).sort((a,b)=>
 function chapterOf(n){let g=groups.find(g=>g.names.includes(n));return g?g.id:""}
 function openReview(n){currentGroup=groups.find(g=>g.names.includes(n));currentStage=1;pool=[n];qi=0;answered=false;show("quiz");drawQuestion()}
 let egg=0;function eggClick(){document.getElementById("modal").classList.add("show")}function closeEgg(){document.getElementById("modal").classList.remove("show")}
-function validateChapterGroups(){const a=groups.find(g=>g.id==="26A")?.names||[],b=groups.find(g=>g.id==="26B")?.names||[],overlap=a.filter(n=>b.includes(n));if(overlap.length)throw new Error("Chapter 26A/26B overlap: "+overlap.join(", "));groups.forEach(g=>{if(new Set(g.names).size!==g.names.length)throw new Error("Duplicate drug in "+g.id)});return true}validateChapterGroups();window.onpopstate=()=>{show("home")};renderChapters();renderFlashcards();renderEncyclopedia();
+function validateQuestionData(){const m=new Map(drugs.map(d=>[d[0],d]));const e=[];groups.forEach(g=>g.names.forEach(n=>{const d=m.get(n);if(!d)e.push(g.id+" · "+n+" 데이터 없음");else if(d.length<5)e.push(n+" 데이터 필드 부족")}));if(e.length)console.error("학습 데이터 검증 실패",e);return !e.length}
+function validateChapterGroups(){const a=groups.find(g=>g.id==="26A")?.names||[],b=groups.find(g=>g.id==="26B")?.names||[],overlap=a.filter(n=>b.includes(n));if(overlap.length)throw new Error("Chapter 26A/26B overlap: "+overlap.join(", "));groups.forEach(g=>{if(new Set(g.names).size!==g.names.length)throw new Error("Duplicate drug in "+g.id)});return true}validateChapterGroups();validateQuestionData();window.onpopstate=()=>{show("home")};renderChapters();renderFlashcards();renderEncyclopedia();
 </script></body></html>
