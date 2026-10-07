@@ -171,7 +171,26 @@ function escapeAttr(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quo
 function normalizeText(v){return String(v||"").toLowerCase().replace(/[\s\-_/.,;:()\[\]{}→↑↓+]/g,"").replace(/α/g,"alpha").replace(/β/g,"beta").replace(/γ/g,"gamma").replace(/μ/g,"u");}
 function record(ok){let n=pool[qi],r=rec(n);r.seen=(r.seen||0)+1;r.correct=(r.correct||0)+(ok?1:0);r.wrong=(r.wrong||0)+(ok?0:1);r.stage[currentStage]=r.stage[currentStage]||{correct:0,wrong:0};r.stage[currentStage].correct+=(ok?1:0);r.stage[currentStage].wrong+=(ok?0:1);state[n]=r;save();}
 function resetProgress(){if(!confirm("모든 학습 기록과 저장소를 초기화할까요?\n이 작업은 되돌릴 수 없습니다."))return;localStorage.removeItem(key);localStorage.removeItem("pharmChapterRecallV5");localStorage.removeItem("pharmChapterRecallV4");localStorage.removeItem("pharmSavedRecallV1");localStorage.removeItem("pharmChapterRecallV3");localStorage.removeItem("pharmStarredDrugsV1");state={};saved=[];starred=[];currentStage=1;qi=0;answered=false;renderChapters();renderSaved();renderStarred();renderStages();alert("진행률과 저장소가 초기화되었습니다.");}
-function answerChoice(selected,correct){if(answered)return;let n=pool[qi],d=info(n),ok=targetKey(selected)===targetKey(correct);answered=true;record(ok);document.querySelectorAll("#quizArea .choice-btn,#quizArea .structure-choice").forEach(b=>{b.disabled=true;b.classList.toggle("correct",targetKey(b.dataset.choice)===targetKey(correct));b.classList.toggle("wrong",b.dataset.choice===selected&&!ok)});let explanation='<div class="drug-explanation"><div class="drug-explanation-head"><div><div class="drug-explanation-name">'+escapeHtml(n)+'</div><span class="drug-explanation-class">'+escapeHtml(d[1])+'</span></div></div><div class="drug-info-grid"><div class="drug-info-item"><span class="drug-info-label">약물표적</span><span class="drug-info-value">'+escapeHtml(d[2])+'</span></div><div class="drug-info-item"><span class="drug-info-label">작용양식 · MOA</span><span class="drug-info-value">'+escapeHtml(d[3])+'</span></div><div class="drug-info-item" style="grid-column:1/-1"><span class="drug-info-label">대표 용도</span><span class="drug-info-value">'+escapeHtml(d[4])+'</span></div></div>'+(etymology[n]?'<div class="drug-memory"><b>💡 암기 포인트</b><br>'+escapeHtml(etymology[n])+'</div>':'')+'</div>';document.getElementById("feedback").innerHTML=answered=false;drawQuestion()}else{alert("Stage "+currentStage+" 완료! 다음 학습 단계에서 이어서 복습하세요.");show("stages")}}
+function answerChoice(selected,correct){
+  if(answered)return;
+  const n=pool[qi],d=info(n),ok=targetKey(selected)===targetKey(correct);
+  answered=true;record(ok);
+  document.querySelectorAll("#quizArea .choice-btn,#quizArea .structure-choice").forEach(b=>{
+    b.disabled=true;
+    b.classList.toggle("correct",targetKey(b.dataset.choice)===targetKey(correct));
+    b.classList.toggle("wrong",b.dataset.choice===selected&&!ok);
+  });
+  const explanation='<div class="drug-explanation"><div class="drug-explanation-head"><div><div class="drug-explanation-name">'+escapeHtml(n)+'</div><span class="drug-explanation-class">'+escapeHtml(d[1])+'</span></div></div><div class="drug-info-grid"><div class="drug-info-item"><span class="drug-info-label">약물표적</span><span class="drug-info-value">'+escapeHtml(d[2])+'</span></div><div class="drug-info-item"><span class="drug-info-label">작용양식 · MOA</span><span class="drug-info-value">'+escapeHtml(d[3])+'</span></div><div class="drug-info-item" style="grid-column:1/-1"><span class="drug-info-label">대표 용도</span><span class="drug-info-value">'+escapeHtml(d[4])+'</span></div></div>'+(etymology[n]?'<div class="drug-memory"><b>💡 암기 포인트</b><br>'+escapeHtml(etymology[n])+'</div>':'')+'</div>';
+  document.getElementById("feedback").innerHTML='<div class="feedback '+(ok?"good":"bad")+'">'+(ok?"✓ 정답":"✗ 오답")+'<br>'+explanation+'</div><button style="margin-top:10px" onclick="nextQuestion()">다음 →</button>';
+}
+function nextQuestion(){
+  if(qi<pool.length-1){
+    qi++;answered=false;drawQuestion();
+  }else{
+    alert("Stage "+currentStage+" 완료! 다음 학습 단계에서 이어서 복습하세요.");
+    show("stages");
+  }
+}
 const etymology={
 "Dobutamine":"do-buta-: butyl/phenyl계 구조를 떠올리는 암기 포인트 · -amine: amine 작용기를 연상. ※ 명칭을 약리작용에서 역으로 만든 공식 어원으로 해석하지 말고 구조 암기로 사용하세요.",
 "Procainamide":"procaine + amide: procaine의 구조를 바탕으로 한 amide 유도체라는 점이 핵심 · 'amide'를 구조적 특징으로 기억.",
@@ -277,8 +296,6 @@ let egg=0;function eggClick(){document.getElementById("modal").classList.add("sh
 function validateTargetOptions(){const vals=drugs.map(d=>d[2]);const dup=vals.filter((v,i,a)=>a.findIndex(x=>targetKey(x)===targetKey(v))!==i);if(dup.length)console.warn("약물표적 중복 표현이 정규화되지 않았습니다.",[...new Set(dup)]);return !dup.length}
 function validateQuestionData(){const m=new Map(drugs.map(d=>[d[0],d]));const e=[];groups.forEach(g=>g.names.forEach(n=>{const d=m.get(n);if(!d)e.push(g.id+" · "+n+" 데이터 없음");else if(d.length<5)e.push(n+" 데이터 필드 부족")}));if(e.length)console.error("학습 데이터 검증 실패",e);return !e.length}
 function validateChapterGroups(){const a=groups.find(g=>g.id==="26A")?.names||[],b=groups.find(g=>g.id==="26B")?.names||[],overlap=a.filter(n=>b.includes(n));if(overlap.length)throw new Error("Chapter 26A/26B overlap: "+overlap.join(", "));groups.forEach(g=>{if(new Set(g.names).size!==g.names.length)throw new Error("Duplicate drug in "+g.id)});return true}renderChapters();
-renderFlashcards();
-renderEncyclopedia();
 renderStarred();
 window.onpopstate=()=>{show("home")};
 setTimeout(prepareLearningData,1000);
