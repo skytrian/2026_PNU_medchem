@@ -18,7 +18,7 @@ button{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 .hidden{display:none!important}.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 9px;color:var(--accent);font-size:12px;margin:2px}
 .footer{border-top:1px solid var(--line);margin-top:35px;padding:22px 0;color:var(--muted);font-size:13px}.egg{cursor:pointer;user-select:none}.modal{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:99;padding:20px}.modal.show{display:grid}.modalbox{max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:center}.modalbox img{max-width:100%;max-height:70vh;border-radius:12px}.modalbox a{color:var(--accent)}
 @media(max-width:650px){.choices{grid-template-columns:1fr}.structure{min-height:250px}}
-</style></head>
+.match-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.match-item{border:1px solid var(--border,#ddd);border-radius:12px;padding:12px}.match-item h3{margin:0 0 8px;font-size:1rem}.match-choice.selected{outline:3px solid currentColor}.match-item .choices{display:grid;gap:8px}@media(max-width:800px){.match-grid{grid-template-columns:1fr}}</style></head>
 <body>
 <header><h1>💊 Pharmacology Structure Recall</h1><p class="muted">Chapter 18–26 · <b>구조 → 일반명 → 용도 → 약물표적 → 작용양식</b>를 단계별로 반복 회상하는 시험 대비 학습 페이지</p></header>
 <nav><div class="navin">
@@ -49,7 +49,7 @@ const groups=[{"id":"18","title":"심혈관계 기본 약물","names":["Dobutami
 const targetDisplayMap={"β1-adrenergic receptor":"β1-AR (β1-adrenergic receptor)","Voltage-gated Na+ channel":"VGSC (voltage-gated sodium channel)","NO–cGMP pathway / soluble guanylyl cyclase":"sGC (soluble guanylyl cyclase) / NO–cGMP pathway","Carbonic anhydrase":"CA (carbonic anhydrase)","NCC (Na+/Cl− cotransporter)":"NCC (Na+/Cl− cotransporter)","NKCC2 (Na+/K+/2Cl− cotransporter)":"NKCC2 (Na+/K+/2Cl− cotransporter 2)","NKCC2":"NKCC2 (Na+/K+/2Cl− cotransporter 2)","ENaC":"ENaC (epithelial sodium channel)","ACE":"ACE (angiotensin-converting enzyme)","AT1 receptor":"AT1R (angiotensin II type 1 receptor)","L-type Ca2+ channel":"LTCC (L-type voltage-gated calcium channel)","ATP-sensitive K+ channel":"KATP channel (ATP-sensitive potassium channel)","β1/β2 + α1 adrenergic receptors":"β1/β2-AR + α1-AR (β1/β2- and α1-adrenergic receptors)","HMG-CoA reductase":"HMG-CoA reductase (3-hydroxy-3-methylglutaryl-coenzyme A reductase)","NPC1L1":"NPC1L1 (NPC1-like intracellular cholesterol transporter 1)","PPARα":"PPARα (peroxisome proliferator-activated receptor alpha)","GPR109A (HM74A)":"GPR109A/HM74A (G protein-coupled receptor 109A)","Vitamin K epoxide reductase (VKORC1)":"VKORC1 (vitamin K epoxide reductase complex subunit 1)","Thrombin (factor IIa)":"thrombin (factor IIa)","P2Y12 ADP receptor":"P2Y12 receptor (P2Y12 ADP receptor)","PDE3":"PDE3 (phosphodiesterase 3)","PDE + ENT":"PDEs + ENTs (phosphodiesterases + equilibrative nucleoside transporters)","GPIIb/IIIa integrin":"GPIIb/IIIa (glycoprotein IIb/IIIa integrin)","Sulfonylurea receptor / KATP channel":"SUR1/KATP channel (sulfonylurea receptor 1 / ATP-sensitive potassium channel)","KATP channel (SUR1)":"SUR1/KATP channel (sulfonylurea receptor 1 / ATP-sensitive potassium channel)","PPARγ":"PPARγ (peroxisome proliferator-activated receptor gamma)","Mitochondrial complex I / AMPK-related pathways":"mitochondrial complex I / AMPK (AMP-activated protein kinase)-related pathways","DPP-4":"DPP-4 (dipeptidyl peptidase 4)","Intestinal α-glucosidases":"intestinal α-glucosidases (α-glucosidase enzymes)","SGLT2":"SGLT2 (sodium-glucose cotransporter 2)","Glucocorticoid receptor":"GR (glucocorticoid receptor)","Estrogen receptor ERα/ERβ":"ERα/ERβ (estrogen receptors alpha/beta)","Androgen receptor":"AR (androgen receptor)","Estrogen receptor":"ER (estrogen receptor)","Aromatase (CYP19A1)":"CYP19A1 (aromatase)","5α-reductase type 2":"5α-reductase type 2 (SRD5A2)","Thyroid hormone receptor":"TR (thyroid hormone receptor)","Thyroid peroxidase":"TPO (thyroid peroxidase)","Thyroid peroxidase; peripheral 5'-deiodinase":"TPO (thyroid peroxidase); peripheral 5′-deiodinase","Hydroxyapatite / osteoclast pathway":"hydroxyapatite / osteoclast pathway","FPP synthase in osteoclasts":"FPPS (farnesyl pyrophosphate synthase) in osteoclasts","COX-1/COX-2":"COX-1/COX-2 (cyclooxygenase-1/cyclooxygenase-2)","Central prostaglandin pathways":"central prostaglandin pathways","COX-2":"COX-2 (cyclooxygenase-2)","URAT1 및 renal organic anion transporters":"URAT1 (urate transporter 1) 및 renal organic anion transporters"};
 drugs.forEach(d=>{if(targetDisplayMap[d[2]])d[2]=targetDisplayMap[d[2]];});
 function targetKey(v){return normalizeText(v);}
-const stageNames=["① 구조 → 일반명","② 구조 → 약물표적","③ 구조 → MOA","④ 구조 → 용도"]; const stageDesc=["구조를 보고 4개의 일반명 중 정답을 고릅니다.","구조를 보고 4개의 약물표적 중 정답을 고릅니다.","구조를 보고 4개의 핵심 작용양식(MOA) 중 정답을 고릅니다.","구조를 보고 4개의 대표 용도 중 정답을 고릅니다."]; const key="pharmChapterRecallV5";
+const stageNames=["① 구조 → 일반명","② 구조 → 약물표적","③ 구조 → MOA","④ 구조 → 용도","⑤ 1:3 종합 매칭"]; const stageDesc=["구조를 보고 4개의 일반명 중 정답을 고릅니다.","구조를 보고 4개의 약물표적 중 정답을 고릅니다.","구조를 보고 4개의 핵심 작용양식(MOA) 중 정답을 고릅니다.","구조를 보고 4개의 대표 용도 중 정답을 고릅니다.","하나의 구조를 보고 일반명·용도·MOA를 각각 선택합니다. 세 항목을 모두 맞혀야 정답입니다."]; const key="pharmChapterRecallV6";
 let state=JSON.parse(localStorage.getItem(key)||"{}"), saved=JSON.parse(localStorage.getItem("pharmSavedRecallV1")||"[]").filter(x=>x.stage>=1&&x.stage<=4), starred=JSON.parse(localStorage.getItem("pharmStarredDrugsV1")||"[]"), currentGroup=null,currentStage=1,pool=[],qi=0,answered=false;
 function save(){localStorage.setItem(key,JSON.stringify(state));renderChapters()}
 function saveSaved(){localStorage.setItem("pharmSavedRecallV1",JSON.stringify(saved))}
@@ -71,7 +71,7 @@ function renderBundle(){document.getElementById("bundleChecks").innerHTML=groups
 function selectAllBundle(){document.querySelectorAll(".bundle-check").forEach(x=>x.checked=true)}
 function clearBundle(){document.querySelectorAll(".bundle-check").forEach(x=>x.checked=false)}
 function startBundle(){let ids=[...document.querySelectorAll(".bundle-check:checked")].map(x=>x.value);if(!ids.length){alert("최소 1개의 Chapter를 선택하세요.");return}let names=[...new Set(ids.flatMap(id=>groups.find(g=>g.id===id).names))];currentGroup={id:ids.join("+"),title:ids.map(id=>"CH "+id).join(" + "),names};currentStage=Number(document.getElementById("bundleStage").value);pool=[...names].sort(()=>Math.random()-.5);qi=0;answered=false;history.pushState({screen:"quiz",group:currentGroup.id,stage:currentStage},"","#bundle-"+ids.join("-")+"-stage-"+currentStage);show("quiz");drawQuestion()}
-function mastered(n){const r=rec(n);return [1,2,3,4].every(k=>(r.stage[k]?.correct||0)>0)}
+function mastered(n){const r=rec(n);return [1,2,3,4,5].every(k=>(r.stage[k]?.correct||0)>0)}
 function renderChapters(){document.getElementById("chapterGrid").innerHTML=groups.map(g=>{let done=g.names.filter(mastered).length;let attempts=g.names.reduce((a,n)=>a+rec(n).seen,0);return '<article class="card" data-chapter="'+g.id+'" onclick="chooseGroup(this.dataset.chapter)"><div class="num">CHAPTER '+g.id+'</div><h3>'+g.title+'</h3><div class="count">'+g.names.length+'개 약물 · 마스터 '+done+'/'+g.names.length+' · 누적 풀이 '+attempts+'회</div><div class="bar"><i style="width:'+Math.round(done/g.names.length*100)+'%"></i></div><button onclick="event.stopPropagation();chooseGroup(this.closest(\'article\').dataset.chapter)">학습 시작</button></article>'}).join("")}
 function renderStages(){if(!currentGroup){show("home");return}let masteredCount=currentGroup.names.filter(mastered).length;document.getElementById("stageTitle").textContent="Chapter "+currentGroup.id+" · "+currentGroup.title;document.getElementById("stageDesc").textContent=currentGroup.names.length+"개 약물 · 마스터 "+masteredCount+"/"+currentGroup.names.length+" · 4단계 4지선다";document.getElementById("stageGrid").innerHTML=stageNames.map((st,k)=>{let num=k+1,total=currentGroup.names.reduce((a,n)=>a+(rec(n).stage[num]?.correct||0),0),wrong=currentGroup.names.reduce((a,n)=>a+(rec(n).stage[num]?.wrong||0),0);return '<article class="card stage" onclick="startStage('+num+')"><span class="pill">STAGE '+num+'</span><h3>'+st+'</h3><p>'+stageDesc[k]+'</p><p style="margin-top:10px">누적 정답 <b>'+total+'</b>회 · 오답 <b>'+wrong+'</b>회</p></article>'}).join("")}
 function startStage(n){currentStage=n;let names=[...currentGroup.names];names.sort((a,b)=>{let ra=rec(a),rb=rec(b);let sa=(ra.stage[n]?.correct||0)-(ra.stage[n]?.wrong||0),sb=(rb.stage[n]?.correct||0)-(rb.stage[n]?.wrong||0);return sa-sb||Math.random()-.5});if(names.length>1&&n>1){let shift=(n-1)%names.length;names=names.slice(shift).concat(names.slice(0,shift));}pool=names;qi=0;answered=false;history.pushState({screen:"quiz",group:currentGroup.id,stage:n},"","#"+currentGroup.id+"-stage-"+n);show("quiz");drawQuestion()}
@@ -85,23 +85,52 @@ let q=document.getElementById("quizArea"),html="",correct,cs;
 let structure='<div class="structure"><img src="'+img(n)+'" alt="'+n+' 구조"></div>';
 if(currentStage===1){
   correct=n;cs=choicesFor(correct,0);
-  html=structure+'<div class="prompt">이 구조의 약물 <b>일반명</b>을 선택하세요.</div><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+x+'</button>').join("")+'</div><div id="feedback"></div>';
+  html=structure+'<div class="prompt">이 구조의 약물 <b>일반명</b>을 선택하세요.</div><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div><div id="feedback"></div>';
 }else if(currentStage===2){
   correct=d[2];cs=choicesFor(correct,2);
   html=structure+'<div class="prompt">이 구조의 <b>약물표적</b>을 선택하세요.</div><p class="muted">약칭과 full name이 함께 표시됩니다.</p><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div><div id="feedback"></div>';
 }else if(currentStage===3){
   correct=d[3];cs=choicesFor(correct,3);
   html=structure+'<div class="prompt">이 구조의 핵심 <b>작용양식(MOA)</b>을 선택하세요.</div><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div><div id="feedback"></div>';
-}else{
+}else if(currentStage===4){
   correct=d[4];cs=choicesFor(correct,4);
   html=structure+'<div class="prompt">이 구조의 대표 <b>용도</b>를 선택하세요.</div><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div><div id="feedback"></div>';
+}else{
+  html=structure+'<div class="prompt"><b>1:3 종합 매칭</b> — 이 구조에 해당하는 <b>일반명·용도·MOA</b>를 각각 하나씩 선택하세요.</div><div class="match-grid">'+
+    '<div class="match-item"><h3>① 일반명</h3><div class="choices">'+choicesFor(n,0).map(x=>'<button type="button" class="choice-btn match-choice" data-kind="name" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div></div>'+
+    '<div class="match-item"><h3>② 용도</h3><div class="choices">'+choicesFor(d[4],4).map(x=>'<button type="button" class="choice-btn match-choice" data-kind="use" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div></div>'+
+    '<div class="match-item"><h3>③ MOA</h3><div class="choices">'+choicesFor(d[3],3).map(x=>'<button type="button" class="choice-btn match-choice" data-kind="moa" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div></div>'+
+    '</div><button type="button" id="submitMatch" style="margin-top:14px">✓ 3개 답 제출</button><div id="feedback"></div>';
 }
-q.innerHTML=html;q.querySelectorAll("img").forEach(el=>el.addEventListener("error",()=>{el.style.display="none";if(!el.parentElement.querySelector(".image-error")){const p=document.createElement("p");p.className="muted image-error";p.textContent="구조 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";el.parentElement.appendChild(p)}}));bindChoiceButtons(correct);
+q.innerHTML=html;
+q.querySelectorAll("img").forEach(el=>el.addEventListener("error",()=>{el.style.display="none";if(!el.parentElement.querySelector(".image-error")){const p=document.createElement("p");p.className="muted image-error";p.textContent="구조 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";el.parentElement.appendChild(p)}}));
+if(currentStage===5){
+  const selected={};
+  q.querySelectorAll(".match-choice").forEach(b=>b.addEventListener("click",()=>{
+    if(answered)return;
+    const kind=b.dataset.kind;
+    q.querySelectorAll('.match-choice[data-kind="'+kind+'"]').forEach(x=>x.classList.remove("selected"));
+    b.classList.add("selected");selected[kind]=b.dataset.choice;
+    const submit=q.querySelector("#submitMatch");
+    submit.disabled=!selected.name||!selected.use||!selected.moa;
+  }));
+  q.querySelector("#submitMatch").disabled=true;
+  q.querySelector("#submitMatch").addEventListener("click",()=>{
+    if(answered)return;
+    const ok=targetKey(selected.name)===targetKey(n)&&targetKey(selected.use)===targetKey(d[4])&&targetKey(selected.moa)===targetKey(d[3]);
+    answered=true;record(ok);
+    q.querySelectorAll(".match-choice").forEach(b=>{b.disabled=true;const kind=b.dataset.kind;const correctValue=kind==="name"?n:kind==="use"?d[4]:d[3];b.classList.toggle("correct",targetKey(b.dataset.choice)===targetKey(correctValue));b.classList.toggle("wrong",b.classList.contains("selected")&&!b.classList.contains("correct"));});
+    let explanation="<b>"+escapeHtml(n)+"</b> — "+escapeHtml(d[1])+"<br>약물표적: "+escapeHtml(d[2])+"<br>MOA: "+escapeHtml(d[3])+"<br>대표 용도: "+escapeHtml(d[4]);if(etymology[n])explanation+="<br>암기 포인트: "+escapeHtml(etymology[n]);
+    q.querySelector("#feedback").innerHTML='<div class="feedback '+(ok?"good":"bad")+'">'+(ok?"✓ 3개 모두 정답":"✗ 일부 또는 전체 오답")+'<br>'+explanation+'</div><button style="margin-top:10px" onclick="nextQuestion()">다음 →</button>';
+  });
+}else{
+  bindChoiceButtons(correct);
+}
 }
 function escapeAttr(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");} function escapeHtml(s){return escapeAttr(s);}
 function normalizeText(v){return String(v||"").toLowerCase().replace(/[\s\-_/.,;:()\[\]{}→↑↓+]/g,"").replace(/α/g,"alpha").replace(/β/g,"beta").replace(/γ/g,"gamma").replace(/μ/g,"u");}
 function record(ok){let n=pool[qi],r=rec(n);r.seen=(r.seen||0)+1;r.correct=(r.correct||0)+(ok?1:0);r.wrong=(r.wrong||0)+(ok?0:1);r.stage[currentStage]=r.stage[currentStage]||{correct:0,wrong:0};r.stage[currentStage].correct+=(ok?1:0);r.stage[currentStage].wrong+=(ok?0:1);state[n]=r;save();}
-function resetProgress(){if(!confirm("모든 학습 기록과 저장소를 초기화할까요?\n이 작업은 되돌릴 수 없습니다."))return;localStorage.removeItem(key);localStorage.removeItem("pharmChapterRecallV4");localStorage.removeItem("pharmSavedRecallV1");localStorage.removeItem("pharmChapterRecallV3");localStorage.removeItem("pharmStarredDrugsV1");state={};saved=[];starred=[];currentStage=1;qi=0;answered=false;renderChapters();renderSaved();renderStarred();renderStages();alert("진행률과 저장소가 초기화되었습니다.");}
+function resetProgress(){if(!confirm("모든 학습 기록과 저장소를 초기화할까요?\n이 작업은 되돌릴 수 없습니다."))return;localStorage.removeItem(key);localStorage.removeItem("pharmChapterRecallV5");localStorage.removeItem("pharmChapterRecallV4");localStorage.removeItem("pharmSavedRecallV1");localStorage.removeItem("pharmChapterRecallV3");localStorage.removeItem("pharmStarredDrugsV1");state={};saved=[];starred=[];currentStage=1;qi=0;answered=false;renderChapters();renderSaved();renderStarred();renderStages();alert("진행률과 저장소가 초기화되었습니다.");}
 function answerChoice(selected,correct){if(answered)return;let n=pool[qi],d=info(n),ok=targetKey(selected)===targetKey(correct);answered=true;record(ok);document.querySelectorAll("#quizArea .choice-btn").forEach(b=>{b.disabled=true;b.classList.toggle("correct",targetKey(b.dataset.choice)===targetKey(correct));b.classList.toggle("wrong",b.dataset.choice===selected&&!ok)});let explanation="<b>"+escapeHtml(n)+"</b> — "+escapeHtml(d[1])+"<br>약물표적: "+escapeHtml(d[2])+"<br>MOA: "+escapeHtml(d[3])+"<br>대표 용도: "+escapeHtml(d[4]);if(etymology[n])explanation+="<br>암기 포인트: "+escapeHtml(etymology[n]);document.getElementById("feedback").innerHTML='<div class="feedback '+(ok?"good":"bad")+'">'+(ok?"✓ 정답":"✗ 오답")+'<br><b>정답: '+escapeHtml(correct)+'</b><hr style="margin:10px 0">'+explanation+'</div><button style="margin-top:10px" onclick="nextQuestion()">다음 →</button>'}
 function nextQuestion(){if(qi<pool.length-1){qi++;answered=false;drawQuestion()}else{alert("Stage "+currentStage+" 완료! 다음 학습 단계에서 이어서 복습하세요.");show("stages")}}
 const etymology={
