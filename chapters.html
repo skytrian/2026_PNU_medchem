@@ -83,16 +83,15 @@ function prepareLearningData(){
  const jobs=[];drugs.forEach(d=>[0,2,3,4].forEach(f=>jobs.push([d[f],f])));
  let done=0,total=jobs.length;
  const title=document.getElementById("dataLoadTitle"),status=document.getElementById("dataLoadStatus"),bar=document.getElementById("dataLoadBar");
- const update=()=>{const pct=Math.round(done/total*100);if(bar)bar.style.width=pct+"%";if(status)status.innerHTML="학습 데이터를 준비하고 있습니다. <b>"+pct+"%</b>";};
- const tick=deadline=>{
-   const end=deadline?deadline.timeRemaining():8;
-   const started=performance.now();
-   while(done<total && (deadline?deadline.timeRemaining()>1:performance.now()-started<end)){const [correct,field]=jobs[done],key=distractorCacheKey(correct,field);if(!distractorCache.has(key))distractorCache.set(key,distractors(correct,field));done++}
+ const update=()=>{const pct=Math.min(100,Math.floor(done/total*100));if(bar)bar.style.width=pct+"%";if(status)status.innerHTML="학습 데이터를 준비하고 있습니다. <b>"+pct+"%</b>";};
+ const tick=()=>{
+   const batch=Math.min(3,total-done);
+   for(let i=0;i<batch;i++){const [correct,field]=jobs[done],key=distractorCacheKey(correct,field);if(!distractorCache.has(key))distractorCache.set(key,distractors(correct,field));done++}
    update();
-   if(done<total){(window.requestIdleCallback||function(cb){setTimeout(()=>cb(null),0)})(tick)}
+   if(done<total){setTimeout(tick,16)}
    else{learningDataReady=true;if(title)title.textContent="Chapter 목록을 불러왔습니다.";if(status)status.innerHTML="학습 데이터 준비 완료 · <b>100%</b>";if(bar)bar.style.width="100%";}
  };
- update();(window.requestIdleCallback||function(cb){setTimeout(()=>cb(null),0)})(tick);
+ update();setTimeout(tick,30);
 }
 function bindChoiceButtons(correct){document.querySelectorAll("#quizArea .choice-btn").forEach(btn=>{btn.addEventListener("click",()=>answerChoice(btn.dataset.choice,correct));});}
 function drawQuestion(){
