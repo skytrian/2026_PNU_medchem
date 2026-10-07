@@ -155,7 +155,7 @@ if(currentStage===1){
     '<div class="match-item"><h3>③ MOA</h3><div class="choices">'+choicesFor(d[3],3).map(x=>'<button type="button" class="choice-btn match-choice" data-kind="moa" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div></div>'+
     '</div><button type="button" id="submitMatch" style="margin-top:14px">✓ 3개 답 제출</button><div id="feedback"></div>';
 }
-q.innerHTML=html;if(currentStage===6)document.getElementById("submitTyping")?.addEventListener("click",answerTyping);
+q.innerHTML=html;if(currentStage===6){const input=document.getElementById("drugTyping");document.getElementById("submitTyping")?.addEventListener("click",answerTyping);input?.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();answerTyping()}});}
 q.querySelectorAll("img").forEach(el=>el.addEventListener("error",()=>{el.style.display="none";if(!el.parentElement.querySelector(".image-error")){const p=document.createElement("p");p.className="muted image-error";p.textContent="구조 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";el.parentElement.appendChild(p)}}));
 if(currentStage===5){
   const selected={};
