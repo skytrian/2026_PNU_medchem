@@ -41,7 +41,8 @@ const key="pharmChapterRecallV3";
 let state=JSON.parse(localStorage.getItem(key)||"{}"), currentGroup=null,currentStage=1,pool=[],qi=0,answered=false;
 function save(){localStorage.setItem(key,JSON.stringify(state));renderChapters()}
 function rec(name){return state[name]||{seen:0,correct:0,wrong:0,stage:{}}}
-function img(n){return "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"+encodeURIComponent(n)+"/PNG?image_size=large"}
+const imageAliases={"Etidronate":"Etidronic acid","Trichlormethiazide":"Trichloromethiazide"};
+function img(n){const q=imageAliases[n]||n;return "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"+encodeURIComponent(q)+"/record/PNG?record_type=2d&image_size=large"}
 function info(n){return drugs.find(d=>d[0]===n)}
 function goHome(){history.pushState({screen:"home"},"","#home");show("home")}
 function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");if(id==="home")renderChapters();if(id==="stages")renderStages();if(id==="review")renderReview();window.scrollTo({top:0,behavior:"smooth"})}
