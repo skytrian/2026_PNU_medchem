@@ -77,7 +77,7 @@ document.getElementById("quizMeta").innerHTML='<span class="pill">'+meta+'</span
 let q=document.getElementById("quizArea"),html="",correct;
 if(currentStage===1){
 let cs=choicesFor(n,0);correct=n;
-html='<div class="structure"><img src="'+img(n)+'" alt="'+n+' 구조" onerror="this.style.display=\'none\';this.parentElement.insertAdjacentHTML(\'beforeend\',\'<p class="muted">구조 이미지를 불러오지 못했습니다.</p>\')"></div><div class="prompt">이 구조의 약물 일반명을 선택하세요.</div><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+x+'</button>').join("")+'</div><div id="feedback"></div>';
+html='<div class="structure"><img src="'+img(n)+'" alt="'+n+' 구조"></div><div class="prompt">이 구조의 약물 일반명을 선택하세요.</div><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+x+'</button>').join("")+'</div><div id="feedback"></div>';
 }else if(currentStage===2){
 correct=d[2];let cs=choicesFor(correct,2);
 html='<div class="prompt">'+n+'</div><p class="muted">가장 적절한 약물표적을 선택하세요.</p><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+x+'</button>').join("")+'</div><div id="feedback"></div>';
