@@ -74,14 +74,19 @@ function renderStages(){if(!currentGroup){show("home");return}let masteredCount=
 const similarGroups=[{title:"ACE inhibitor",names:["Captopril","Enalapril","Lisinopril","Fosinopril"]},{title:"ARB",names:["Losartan","Telmisartan","Candesartan","Olmesartan"]},{title:"Thiazide계 이뇨제",names:["Hydrochlorothiazide","Trichlormethiazide"]},{title:"Loop diuretic",names:["Furosemide","Bumetanide","Ethacrynic acid"]},{title:"Ca2+ channel blocker",names:["Verapamil","Nifedipine","Diltiazem","Amlodipine"]},{title:"Statin",names:["Simvastatin","Pravastatin","Atorvastatin","Rosuvastatin"]},{title:"Sulfonylurea",names:["Glipizide","Tolbutamide","Glimepiride","Glibenclamide"]},{title:"DPP-4 inhibitor",names:["Sitagliptin","Saxagliptin","Vildagliptin"]},{title:"Glucocorticoid",names:["Prednisolone","Dexamethasone","Triamcinolone acetonide"]},{title:"SERM",names:["Tamoxifen","Raloxifene"]},{title:"Aromatase inhibitor",names:["Anastrozole","Letrozole"]},{title:"Bisphosphonate",names:["Etidronate","Alendronate"]},{title:"NSAID",names:["Ibuprofen","Naproxen","Diclofenac","Mefenamic acid"]}];function similarGroupFor(n){return similarGroups.find(g=>g.names.includes(n))}function similarCandidates(n){const g=similarGroupFor(n);return g?[...g.names].sort(()=>Math.random()-.5):[n,...drugs.map(d=>d[0]).filter(x=>x!==n).sort(()=>Math.random()-.5).slice(0,3)]}function structureChoiceCard(name){return '<button type="button" class="structure-choice" data-choice="'+escapeAttr(name)+'"><span class="structure-choice-img"><img src="'+img(name)+'" alt="구조"></span></button>'}function startStage(n){currentStage=n;let names=[...currentGroup.names].filter(n=>currentStage!==6||stageEligible(n,6));names.sort(()=>Math.random()-.5);pool=names;qi=0;answered=false;history.pushState({screen:"quiz",group:currentGroup.id,stage:n},"","#"+currentGroup.id+"-stage-"+n);show("quiz");drawQuestion()}
 const useConflictTerms=["고혈압","심부전","협심증","부종","당뇨","고지혈증","중성지방혈증","혈전","부정맥","빈맥","녹내장","고산병","비만","탈모","항응고","항혈소판","골다공증","갑상선","통증","발열","관절염","염증","유방암","전립선","폐부종","심혈관","신장 보호","신장보호"];function useConflict(a,b){const aa=normalizeText(a),bb=normalizeText(b);if(aa===bb)return true;return useConflictTerms.some(k=>{const x=normalizeText(k);return aa.includes(x)&&bb.includes(x)})}
 function distractors(correct,field){let source=drugs.filter(d=>d[field]&&d[field]!==correct);if(field===4){const cd=drugs.find(d=>d[4]===correct),base=source.filter(d=>d[1]!==cd?.[1]&&!useConflict(correct,d[4])),seen=new Set();let pool=base.map(d=>d[4]).filter(v=>{const k=targetKey(v);if(seen.has(k))return false;seen.add(k);return true});if(pool.length<3){const fallback=source.filter(d=>d[1]!==cd?.[1]&&!useConflict(correct,d[4])&&targetKey(d[4])!==targetKey(correct)).map(d=>d[4]);for(const v of fallback){const k=targetKey(v);if(!seen.has(k)){seen.add(k);pool.push(v)}}}return pool.sort(()=>Math.random()-.5).slice(0,3)}let vals=source.map(d=>d[field]),seen=new Set([targetKey(correct)]);vals=vals.filter(x=>{let k=targetKey(x);if(seen.has(k))return false;seen.add(k);return true});return vals.sort(()=>Math.random()-.5).slice(0,3)}
-const distractorCache=new Map();function choiceCacheKey(correct,field){return field+"|"+targetKey(correct)}function distractorCacheKey(correct,field){return choiceCacheKey(correct,field)}function choicesFor(correct,field){
-  const key=choiceCacheKey(correct,field);
-  const cached=distractorCache.get(key);
-  const pool=cached?[...cached]:distractors(correct,field);
-  if(!cached)distractorCache.set(key,[...pool]);
-  let a=[correct,...pool],seen=new Set();
-  a=a.filter(x=>{const k=targetKey(x);if(seen.has(k))return false;seen.add(k);return true});
-  return a.sort(()=>Math.random()-.5);
+const distractorCache=new Map();
+function choiceCacheKey(correct,field){return String(field)+"|"+targetKey(correct);}
+function distractorCacheKey(correct,field){return choiceCacheKey(correct,field);}
+function choicesFor(correct,field){
+  const pool=distractors(correct,field);
+  const values=[correct].concat(pool);
+  const seen=new Set();
+  return values.filter(function(x){
+    const k=targetKey(x);
+    if(seen.has(k))return false;
+    seen.add(k);
+    return true;
+  }).sort(function(){return Math.random()-.5;});
 }
 let learningDataReady=false,backgroundPrepStarted=false;
 function prepareLearningData(){
