@@ -58,16 +58,16 @@ function toggleSaved(name,stage){let i=saved.findIndex(x=>x.name===name&&x.stage
 function rec(name){return state[name]||{seen:0,correct:0,wrong:0,stage:{}}}
 function memoryCore(n){
   const d=info(n),g=similarGroupFor(n);
-  const peers=g?g.names.filter(x=>x!==n).join(", "):"뚜렷한 비교군 없음";
   const structureHint=etymology[n]||"구조 핵심을 확인하세요.";
-  return '<div class="memory-core"><div class="memory-core-title">암기 핵심 3줄</div><div class="memory-core-grid"><div class="memory-core-item"><b>① 구조 단서</b>'+escapeHtml(structureHint)+'</div><div class="memory-core-item"><b>② 계열</b>'+escapeHtml(d[1])+'</div><div class="memory-core-item"><b>③ 헷갈림 방지</b>'+escapeHtml(g?"같은 계열: "+peers:"비교군 없이 구조 자체를 기억")+'</div></div></div>';
+  const compare=g?'<div class="memory-core-item"><b>③ 비교 포인트</b>'+escapeHtml("같은 계열: "+g.names.filter(x=>x!==n).join(", "))+'</div>':"";
+  return '<div class="memory-core"><div class="memory-core-title">암기 핵심 3줄</div><div class="memory-core-grid"><div class="memory-core-item"><b>① 구조 단서</b>'+escapeHtml(structureHint)+'</div><div class="memory-core-item"><b>② 계열</b>'+escapeHtml(d[1])+'</div>'+compare+'</div></div>';
 }
 function quizExplanation(n,showClass=true){
   const d=info(n);
   return '<div class="drug-explanation"><div class="drug-explanation-head"><div><div class="drug-explanation-name">'+escapeHtml(n)+'</div>'+(showClass?'<span class="drug-explanation-class">'+escapeHtml(d[1])+'</span>':'')+'</div></div>'+memoryCore(n)+'</div>';
 }
 const imageAliases={"Etidronate":"Etidronic acid","Trichlormethiazide":"Trichloromethiazide"};
-function img(n){const q=imageAliases[n]||n;return "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"+encodeURIComponent(q)+"/PNG?image_size=300x300"}
+function img(n){const q=imageAliases[n]||n;return "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"+encodeURIComponent(q)+"/PNG?image_size=large"}
 function info(n){return drugs.find(d=>d[0]===n)}
 function goHome(){history.pushState({screen:"home"},"","#home");show("home")}
 function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");if(id==="home")renderChapters();if(id==="stages")renderStages();if(id==="starred")renderStarred();if(id==="bundle")renderBundle();if(id==="review")renderReview();if(id==="saved")renderSaved();if(id==="flashcards")renderFlashcards();if(id==="encyclopedia")renderEncyclopedia();if(id==="sar")renderSAR();window.scrollTo({top:0,behavior:"smooth"})}
