@@ -147,7 +147,7 @@ if(currentStage===1){
   correct=d[4];cs=choicesFor(correct,4);
   html=structure+'<div class="prompt">이 구조의 대표 <b>용도</b>를 선택하세요.</div><div class="choices">'+cs.map(x=>'<button type="button" class="choice-btn" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div><div id="feedback"></div>';
 }else if(currentStage===6){
-  html=structure+'<div class="prompt"><b>구조 → 약물명 타이핑</b></div><div class="typing-form"><input id="drugTyping" placeholder="약물명을 입력하세요"><button type="button" class="primary" id="submitTyping">✓ 정답 제출</button></div><div class="typing-note">대소문자와 공백·하이픈 차이는 구별하지 않습니다.</div><div id="feedback"></div>';
+  html=structure+'<div class="prompt"><b>구조 → 약물명 타이핑</b></div><div class="typing-form"><input id="drugTyping" type="text" name="drug-answer" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text" placeholder="약물명을 입력하세요"><button type="button" class="primary" id="submitTyping">✓ 정답 제출</button></div><div class="typing-note">대소문자와 공백·하이픈 차이는 구별하지 않습니다.</div><div id="feedback"></div>';
 }else{
   html=structure+'<div class="prompt"><b>1:3 종합 매칭</b> — 이 구조에 해당하는 <b>일반명·용도·MOA</b>를 각각 하나씩 선택하세요.</div><div class="match-grid">'+
     '<div class="match-item"><h3>① 일반명</h3><div class="choices">'+choicesFor(n,0).map(x=>'<button type="button" class="choice-btn match-choice" data-kind="name" data-choice="'+escapeAttr(x)+'">'+escapeHtml(x)+'</button>').join("")+'</div></div>'+
