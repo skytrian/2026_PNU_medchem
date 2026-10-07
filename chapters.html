@@ -77,7 +77,7 @@ function distractors(correct,field){let source=drugs.filter(d=>d[field]&&d[field
 const distractorCache=new Map();
 function choiceCacheKey(correct,field){return field+"|"+targetKey(correct)}
 function distractorCacheKey(correct,field){return choiceCacheKey(correct,field)}
-function choicesFor(correct,field){
+const choicesFor=(correct,field)=>{
   const key=choiceCacheKey(correct,field);
   const cached=distractorCache.get(key);
   const pool=cached ? [...cached] : distractors(correct,field);
