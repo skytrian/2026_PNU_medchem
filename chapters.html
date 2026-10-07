@@ -411,8 +411,8 @@ const sarData={
 "Naproxen":"2-(6-methoxy-2-naphthyl)propionic acid. carboxylate ionic anchor + bulky naphthalene hydrophobic group이 핵심이며 S-enantiomer가 주된 활성을 가진다.",
 "Mefenamic acid":"fenamate 계열의 N-phenylanthranilic acid. carboxylate와 두 aromatic rings가 COX binding을 형성하며 ortho methyl groups가 ring twisting과 conformation을 조절한다.",
 "Probenecid":"benzenesulfonamide + carboxylic acid를 가진 lipophilic weak acid. para-substituted aromatic sulfonamide와 carboxylate가 renal organic anion transporters/URAT1 recognition에 중요하며 urate reabsorption을 억제한다."
-}}
-};
+}}}
+;
 function renderSAR(){
   const sel=document.getElementById("sarChapter");
   if(sel&&!sel.options.length)sel.innerHTML=groups.map(g=>'<option value="'+escapeAttr(g.id)+'">CH '+escapeAttr(g.id)+' · '+escapeHtml(g.title)+'</option>').join("");
