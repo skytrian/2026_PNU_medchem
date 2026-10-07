@@ -44,7 +44,7 @@ let state=JSON.parse(localStorage.getItem(key)||"{}"), saved=JSON.parse(localSto
 function save(){localStorage.setItem(key,JSON.stringify(state));renderChapters()}
 function saveSaved(){localStorage.setItem("pharmSavedRecallV1",JSON.stringify(saved))}
 function isSaved(name,stage){return saved.some(x=>x.name===name&&x.stage===stage)}
-function toggleSaved(name,stage){let i=saved.findIndex(x=>x.name===name&&x.stage===stage);if(i>=0)saved.splice(i,1);else saved.push({name,stage,savedAt:Date.now()});saveSaved();renderSaved();drawQuestion()}
+function toggleSaved(name,stage){let i=saved.findIndex(x=>x.name===name&&x.stage===stage);if(i>=0)saved.splice(i,1);else saved.push({name,stage,savedAt:Date.now()});saveSaved();renderSaved()}
 function rec(name){return state[name]||{seen:0,correct:0,wrong:0,stage:{}}}
 const imageAliases={"Etidronate":"Etidronic acid","Trichlormethiazide":"Trichloromethiazide"};
 function img(n){const q=imageAliases[n]||n;return "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"+encodeURIComponent(q)+"/record/PNG?record_type=2d&image_size=large"}
@@ -63,7 +63,7 @@ function renderStages(){if(!currentGroup){show("home");return}document.getElemen
 function startStage(n){currentStage=n;pool=[...currentGroup.names].sort(()=>Math.random()-.5);qi=0;answered=false;history.pushState({screen:"quiz",group:currentGroup.id,stage:n},"","#"+currentGroup.id+"-stage-"+n);show("quiz");drawQuestion()}
 function distractors(correct,field){let vals=drugs.map(d=>d[field]).filter(Boolean).filter(x=>x!==correct);return [...new Set(vals)].sort(()=>Math.random()-.5).slice(0,3)}
 function choicesFor(correct,field){let a=[correct,...distractors(correct,field)];return a.sort(()=>Math.random()-.5)}
-function drawQuestion(){let n=pool[qi],d=info(n),meta="Chapter "+currentGroup.id+" · Stage "+currentStage+" · "+(qi+1)+"/"+pool.length;document.getElementById("quizMeta").innerHTML='<span class="pill">'+meta+'</span><span class="pill">'+stageNames[currentStage-1]+'</span>';let q=document.getElementById("quizArea");
+function drawQuestion(){let n=pool[qi],d=info(n),r=rec(n),meta="Chapter "+currentGroup.id+" · Stage "+currentStage+" · "+(qi+1)+"/"+pool.length;document.getElementById("quizMeta").innerHTML='<span class="pill">'+meta+'</span><span class="pill">'+stageNames[currentStage-1]+'</span><span class="pill">정답 '+(r.stage[currentStage]?.correct||0)+' · 오답 '+(r.stage[currentStage]?.wrong||0)+' · 패스 '+(r.stage[currentStage]?.passed||0)+'</span>';let q=document.getElementById("quizArea");
 if(currentStage===1){q.innerHTML='<div class="structure"><img src="'+img(n)+'" alt="drug structure"></div><div class="prompt">이 구조의 약물명은?</div><button class="primary" onclick="revealAnswer()">정답 보기</button><div id="feedback"></div>'}
 else if(currentStage===2){q.innerHTML='<div class="prompt">약물명: <b>'+n+'</b></div><p class="muted">머릿속으로 구조를 그린 뒤 구조를 확인하세요.</p><div id="structure2" class="structure hidden"><img src="'+img(n)+'" alt="drug structure"></div><button class="primary" onclick="revealAnswer()">구조 보기</button><div id="feedback"></div>'}
 else if(currentStage===3){let cs=choicesFor(n,0);q.innerHTML='<div class="structure"><img src="'+img(n)+'" alt="drug structure"></div><div class="prompt">정답 약물명을 선택하세요.</div><div class="choices">'+cs.map(x=>'<button onclick="answerChoice('+JSON.stringify(x)+','+JSON.stringify(n)+')">'+x+'</button>').join("")+'</div><div id="feedback"></div>'}
