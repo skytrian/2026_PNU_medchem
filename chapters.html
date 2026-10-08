@@ -485,7 +485,7 @@ function validateChapterGroups(){
 }function bootApp(){
   try{restoreTopMenuPreference()}catch(e){console.error("상단 메뉴 상태 복원 실패:",e)}
   try{applyAppVersion()}catch(e){console.error("앱 버전 초기화 실패:",e)}
-  try{migrateStageHistory()}catch(e){console.error("학습 기록 복원 실패:",e);state={};saved=[]}
+  try{migrateStageHistory()}catch(e){console.error("학습 기록 복원 실패:",e);state={}}
   try{renderChapters()}catch(e){
     console.error("Chapter 목록 렌더링 실패:",e);
     const el=document.getElementById("chapterGrid");
