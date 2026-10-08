@@ -200,7 +200,7 @@ function preloadStageQuestions(){
   pool.slice(qi+1).forEach((name,i)=>setTimeout(()=>preloadStructure(name),120*i));
 }
 function bindChoiceButtons(correct){document.querySelectorAll("#quizArea .choice-btn").forEach(btn=>{btn.addEventListener("click",()=>answerChoice(btn.dataset.choice,correct));});}
-function compactExplanation(n,d){return '<div class="drug-explanation"><b>'+escapeHtml(n)+'</b><div class="compact-explanation"><span><b>표적</b> '+escapeHtml(d[2])+'</span><span><b>MOA</b> '+escapeHtml(d[3])+'</span><span><b>용도</b> '+escapeHtml(d[4])+'</span></div></div>}
+function compactExplanation(n,d){var h="";h+="<div class=\"drug-explanation\"><b>"+escapeHtml(n)+"</b>";h+="<div class=\"compact-explanation\">";h+="<span><b>표적</b> "+escapeHtml(d[2])+"</span>";h+="<span><b>MOA</b> "+escapeHtml(d[3])+"</span>";h+="<span><b>용도</b> "+escapeHtml(d[4])+"</span>";h+="</div></div>";return h;}
 function refreshQuizMeta(){const n=pool[qi];if(!n)return;const r=rec(n),meta="Chapter "+currentGroup.id+" · Stage "+currentStage+" · "+(qi+1)+"/"+pool.length;document.getElementById("quizMeta").innerHTML='<span class="pill">'+meta+'</span><span class="pill">'+stageNames[currentStage-1]+'</span><span class="pill">정답 '+(r.stage[currentStage]?.correct||0)+' · 오답 '+(r.stage[currentStage]?.wrong||0)+'</span>'}
 function drawQuestion(){
 const quizbox=document.querySelector("#quiz .quizbox"); if(quizbox){quizbox.classList.toggle("quiz-layout-side",quizLayout==="side")}
