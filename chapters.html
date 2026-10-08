@@ -174,24 +174,51 @@ function restoreTopMenuPreference(){
 }
 function goHome(){history.pushState({screen:"home"},"","#home");show("home")}
 let studySheetRenderToken=0;
+function preloadStudySheetImage(url,retries){
+  return new Promise(function(resolve){
+    let attempt=0;
+    function tryLoad(){
+      attempt++;
+      const image=new Image();
+      let done=false;
+      const finish=function(ok){
+        if(done)return;
+        done=true;
+        if(ok){resolve(true);return}
+        if(attempt<=retries){setTimeout(tryLoad,500*attempt);return}
+        resolve(false);
+      };
+      image.onload=function(){finish(true)};
+      image.onerror=function(){finish(false)};
+      image.src=url+(url.indexOf("?")>=0?"&":"?")+"preload="+Date.now()+"_"+attempt;
+    }
+    tryLoad();
+  });
+}
 async function renderStudySheet(){
   const el=document.getElementById("studySheetTable");
   if(!el)return;
   const status=document.getElementById("studySheetStatus");
   const token=++studySheetRenderToken;
   const total=groups.reduce(function(a,g){return a+g.names.length},0);
-  el.innerHTML='<div class="study-sheet-loading"><div class="study-sheet-loading-title">구조 이미지 불러오는 중…</div><div class="study-sheet-progress"><i id="studySheetProgressBar"></i></div><div id="studySheetLoadingText" class="study-sheet-loading-text">0 / '+total+'개 약물</div></div>';
+  el.innerHTML='<div class="study-sheet-loading"><div class="study-sheet-loading-title">전체 구조 이미지 준비 중…</div><div class="study-sheet-progress"><i id="studySheetProgressBar"></i></div><div id="studySheetLoadingText" class="study-sheet-loading-text">0 / '+total+'개 약물 · 0%</div></div>';
   if(status)status.textContent='구조 이미지 준비 중…';
   const urls=groups.flatMap(function(g){return g.names.map(function(n){return {name:n,url:img(n)}})});
   let loaded=0;
-  await Promise.all(urls.map(function(item){
-    return new Promise(function(resolve){
-      const image=new Image();
-      image.onload=function(){loaded++;updateStudySheetProgress(loaded,total);resolve(true)};
-      image.onerror=function(){loaded++;updateStudySheetProgress(loaded,total);resolve(false)};
-      image.src=item.url;
-    });
-  }));
+  let failed=[];
+  const concurrency=3;
+  let cursor=0;
+  async function worker(){
+    while(cursor<urls.length){
+      const index=cursor++;
+      const item=urls[index];
+      const ok=await preloadStudySheetImage(item.url,3);
+      if(!ok)failed.push(item.name);
+      loaded++;
+      updateStudySheetProgress(loaded,total,failed);
+    }
+  }
+  await Promise.all(Array.from({length:Math.min(concurrency,urls.length)},worker));
   if(token!==studySheetRenderToken)return;
   let html='<div class="study-sheet-table-wrap study-sheet-ready"><table class="study-sheet-table"><thead><tr><th>구분</th><th>구조</th><th>일반명</th><th>주요 용도</th><th>약물표적</th><th>작용양식 (MOA)</th></tr></thead><tbody>';
   groups.forEach(function(g){
@@ -204,14 +231,14 @@ async function renderStudySheet(){
   });
   html+='</tbody></table></div>';
   el.innerHTML=html;
-  if(status)status.textContent='총 '+total+'개 약물 · 구조 이미지 전체 준비 완료';
+  if(status)status.textContent=failed.length?'총 '+total+'개 약물 · '+failed.length+'개 이미지 재확인 필요':'총 '+total+'개 약물 · 구조 이미지 전체 준비 완료';
 }
-function updateStudySheetProgress(loaded,total){
+function updateStudySheetProgress(loaded,total,failed){
   const bar=document.getElementById("studySheetProgressBar");
   const textEl=document.getElementById("studySheetLoadingText");
   const pct=total?Math.round(loaded/total*100):100;
   if(bar)bar.style.width=pct+"%";
-  if(textEl)textEl.textContent=loaded+" / "+total+"개 약물 · "+pct+"%";
+  if(textEl)textEl.textContent=loaded+" / "+total+"개 약물 · "+pct+"%"+(failed&&failed.length?" · 재시도 "+failed.length+"개":"");
 }
 function loadExportLibrary(src){if(window.html2canvas)return Promise.resolve(window.html2canvas);return new Promise(function(resolve,reject){const s=document.createElement("script");s.src=src;s.onload=function(){resolve(window.html2canvas)};s.onerror=function(){reject(new Error("이미지 저장 라이브러리를 불러오지 못했습니다."))};document.head.appendChild(s);});}async function exportStudySheetImage(){const target=document.getElementById("studySheetTable"),status=document.getElementById("studySheetStatus");if(!target)return;try{if(status)status.textContent="이미지 생성 중…";await loadExportLibrary("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");const canvas=await window.html2canvas(target,{backgroundColor:"#ffffff",scale:2,useCORS:true,allowTaint:false,logging:false});canvas.toBlob(function(blob){if(!blob){if(status)status.textContent="이미지 생성에 실패했습니다.";return}const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="MedChem_전체약물_정리표.png";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);if(status)status.textContent="PNG 이미지 저장 완료";},"image/png");}catch(e){console.error("전체 약물 이미지 저장 실패:",e);if(status)status.textContent="이미지 저장 실패 · 다시 시도해 주세요.";alert("이미지 저장에 실패했습니다. 구조 이미지가 모두 로드된 뒤 다시 시도해 주세요.");}}function exportStudySheetPDF(){renderStudySheet();const status=document.getElementById("studySheetStatus");if(status)status.textContent="인쇄 창에서 'PDF로 저장'을 선택하세요.";setTimeout(function(){window.print()},150);}function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");if(id==="home")renderChapters();if(id==="stages")renderStages();if(id==="starred")renderStarred();if(id==="bundle")renderBundle();if(id==="review")renderReview();if(id==="flashcards")renderFlashcards();if(id==="encyclopedia")renderEncyclopedia();if(id==="studySheet")renderStudySheet();if(id==="settings")renderSettings();if(id==="usage"){}window.scrollTo({top:0,behavior:"smooth"})}
 function chooseGroup(id){currentGroup=groups.find(g=>g.id===id);history.pushState({screen:"stages",group:id},"","#"+id);show("stages")}
