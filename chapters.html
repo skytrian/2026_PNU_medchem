@@ -182,6 +182,43 @@ function selectAllBundle(){document.querySelectorAll(".bundle-check").forEach(x=
 function clearBundle(){document.querySelectorAll(".bundle-check").forEach(x=>x.checked=false)}
 function startBundle(){let ids=[...document.querySelectorAll(".bundle-check:checked")].map(x=>x.value);if(!ids.length){alert("최소 1개의 Chapter를 선택하세요.");return}let names=[...new Set(ids.flatMap(id=>groups.find(g=>g.id===id).names))];currentGroup={id:ids.join("+"),title:ids.map(id=>"CH "+id).join(" + "),names};currentStage=Number(document.getElementById("bundleStage").value);pool=[...names].sort(()=>Math.random()-.5);qi=0;answered=false;history.pushState({screen:"quiz",group:currentGroup.id,stage:currentStage},"","#bundle-"+ids.join("-")+"-stage-"+currentStage);show("quiz");drawQuestion()}
 function stageEligible(n,stage){return stage>=1&&stage<=6}function mastered(n){const r=rec(n);return [1,2,3,4,5,6].every(k=>(r.stage[k]?.correct||0)>0)}
+function renderReview(){
+  const el=document.getElementById("reviewList");
+  if(!el)return;
+  const rows=[];
+  groups.forEach(function(g){
+    g.names.forEach(function(n){
+      const r=rec(n), stages=[];
+      for(let s=1;s<=6;s++){
+        const wrong=Number(r.stage?.[s]?.wrong||0);
+        const correct=Number(r.stage?.[s]?.correct||0);
+        if(wrong>0)stages.push({s,wrong,correct});
+      }
+      const totalWrong=stages.reduce((sum,v)=>sum+v.wrong,0);
+      if(totalWrong>0)rows.push({name:n,chapter:g.id,totalWrong,totalCorrect:Number(r.correct||0),stages});
+    });
+  });
+  rows.sort((a,b)=>b.totalWrong-a.totalWrong||a.name.localeCompare(b.name));
+  if(!rows.length){
+    el.innerHTML='<div class="card"><h3>🎉 현재 오답 기록이 없습니다.</h3><p class="muted">학습 중 틀린 문제가 생기면 이곳에 약물별로 누적되어 표시됩니다.</p></div>';
+    return;
+  }
+  el.innerHTML='<div class="card" style="margin-bottom:12px"><b>총 '+rows.length+'개 약물</b><span class="muted"> · 오답 횟수가 많은 약물부터 표시</span></div>'+
+    rows.map(function(item){
+      const safeName=JSON.stringify(item.name).replace(/</g,"\\u003c");
+      const stageButtons=item.stages.sort((a,b)=>b.wrong-a.wrong).map(function(v){
+        return '<button type="button" onclick="openReview('+safeName+','+v.s+')">Stage '+v.s+' · 오답 '+v.wrong+'</button>';
+      }).join("");
+      return '<article class="card" style="margin-bottom:10px">'+
+        '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">'+
+          '<div><div class="num">CHAPTER '+escapeHtml(item.chapter)+'</div><h3 style="margin:5px 0">'+escapeHtml(item.name)+'</h3></div>'+
+          '<div class="pill" style="color:#b91c1c;border-color:#fecaca;background:#fff1f2">오답 '+item.totalWrong+'회</div>'+
+        '</div>'+
+        '<p class="muted" style="margin:8px 0">정답 누적 '+item.totalCorrect+'회 · 취약 단계 '+item.stages.length+'개</p>'+
+        '<div style="display:flex;gap:7px;flex-wrap:wrap">'+stageButtons+'</div>'+
+      '</article>';
+    }).join("");
+}
 function renderChapters(){
   const el=document.getElementById("chapterGrid");
   if(!el)return;
