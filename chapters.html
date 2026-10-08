@@ -303,7 +303,7 @@ function nextQuestion(){
   if(learningLoop&&currentStage<6){currentStage++;pool=[...currentGroup.names].sort(()=>Math.random()-.5);qi=0;answered=false;alert("✓ Stage "+(currentStage-1)+" 완료! 다음 단계로 넘어갑니다.");drawQuestion();return}
   learningLoop=false;alert("🎉 Stage "+currentStage+" 완료!"+(currentStage===6?"\n6단계 암기 루프가 끝났습니다.":" 다음 학습 단계에서 이어서 복습하세요."));show("stages");
 }
-const nameKorean={"Enalapril":"에날라프릴"};function namingLaw(n){return n+" ("+(nameKorean[n]||n)+")"}function namingOrigin(n){return etymology[n]||"약물명과 구조·계열을 연결해 기억하세요."}const etymology={
+const nameKorean=Object.assign({"Enalapril":"에날라프릴"},{"Lisinopril":"리시노프릴","Fosinopril":"포시노프릴","Losartan":"로사르탄","Telmisartan":"텔미사르탄","Candesartan":"칸데사르탄","Olmesartan":"올메사르탄","Verapamil":"베라파밀","Nifedipine":"니페디핀","Diltiazem":"딜티아젬","Amlodipine":"암로디핀"});function namingLaw(n){return n+" ("+(nameKorean[n]||n)+")"}function namingOrigin(n){return etymology[n]||"약물명과 구조·계열을 연결해 기억하세요."}const etymology={
 "Dobutamine":"do-buta-: butyl/phenyl계 구조를 떠올리는 암기 포인트 · -amine: amine 작용기를 연상. ※ 명칭을 약리작용에서 역으로 만든 공식 어원으로 해석하지 말고 구조 암기로 사용하세요.",
 "Procainamide":"procaine + amide: procaine의 구조를 바탕으로 한 amide 유도체라는 점이 핵심 · 'amide'를 구조적 특징으로 기억.",
 "Isosorbide mononitrate":"isosorbide + mono-nitrate: isosorbide 골격에 nitrate ester가 1개라는 뜻으로 기억 · nitrate → NO donor.",
