@@ -46,7 +46,7 @@ const groups=[{"id":"18","title":"강심제 · 협심증 · 부정맥 치료제"
 const targetDisplayMap={"β1-adrenergic receptor":"β1-AR (β1-adrenergic receptor)","Voltage-gated Na+ channel":"VGSC (voltage-gated sodium channel)","NO–cGMP pathway / soluble guanylyl cyclase":"sGC (soluble guanylyl cyclase) / NO–cGMP pathway","Carbonic anhydrase":"CA (carbonic anhydrase)","NCC (Na+/Cl− cotransporter)":"NCC (Na+/Cl− cotransporter)","NKCC2 (Na+/K+/2Cl− cotransporter)":"NKCC2 (Na+/K+/2Cl− cotransporter 2)","NKCC2":"NKCC2 (Na+/K+/2Cl− cotransporter 2)","ENaC":"ENaC (epithelial sodium channel)","ACE":"ACE (angiotensin-converting enzyme)","AT1 receptor":"AT1R (angiotensin II type 1 receptor)","L-type Ca2+ channel":"LTCC (L-type voltage-gated calcium channel)","ATP-sensitive K+ channel":"KATP channel (ATP-sensitive potassium channel)","β1/β2 + α1 adrenergic receptors":"β1/β2-AR + α1-AR (β1/β2- and α1-adrenergic receptors)","HMG-CoA reductase":"HMG-CoA reductase (3-hydroxy-3-methylglutaryl-coenzyme A reductase)","NPC1L1":"NPC1L1 (NPC1-like intracellular cholesterol transporter 1)","PPARα":"PPARα (peroxisome proliferator-activated receptor alpha)","GPR109A (HM74A)":"GPR109A/HM74A (G protein-coupled receptor 109A)","Vitamin K epoxide reductase (VKORC1)":"VKORC1 (vitamin K epoxide reductase complex subunit 1)","Thrombin (factor IIa)":"thrombin (factor IIa)","P2Y12 ADP receptor":"P2Y12 receptor (P2Y12 ADP receptor)","PDE3":"PDE3 (phosphodiesterase 3)","PDE + ENT":"PDEs + ENTs (phosphodiesterases + equilibrative nucleoside transporters)","GPIIb/IIIa integrin":"GPIIb/IIIa (glycoprotein IIb/IIIa integrin)","Sulfonylurea receptor / KATP channel":"SUR1/KATP channel (sulfonylurea receptor 1 / ATP-sensitive potassium channel)","KATP channel (SUR1)":"SUR1/KATP channel (sulfonylurea receptor 1 / ATP-sensitive potassium channel)","PPARγ":"PPARγ (peroxisome proliferator-activated receptor gamma)","Mitochondrial complex I / AMPK-related pathways":"mitochondrial complex I / AMPK (AMP-activated protein kinase)-related pathways","DPP-4":"DPP-4 (dipeptidyl peptidase 4)","Intestinal α-glucosidases":"intestinal α-glucosidases (α-glucosidase enzymes)","SGLT2":"SGLT2 (sodium-glucose cotransporter 2)","Glucocorticoid receptor":"GR (glucocorticoid receptor)","Estrogen receptor ERα/ERβ":"ERα/ERβ (estrogen receptors alpha/beta)","Androgen receptor":"AR (androgen receptor)","Estrogen receptor":"ER (estrogen receptor)","Aromatase (CYP19A1)":"CYP19A1 (aromatase)","5α-reductase type 2":"5α-reductase type 2 (SRD5A2)","Thyroid hormone receptor":"TR (thyroid hormone receptor)","Thyroid peroxidase":"TPO (thyroid peroxidase)","Thyroid peroxidase; peripheral 5'-deiodinase":"TPO (thyroid peroxidase); peripheral 5′-deiodinase","Hydroxyapatite / osteoclast pathway":"hydroxyapatite / osteoclast pathway","FPP synthase in osteoclasts":"FPPS (farnesyl pyrophosphate synthase) in osteoclasts","COX-1/COX-2":"COX-1/COX-2 (cyclooxygenase-1/cyclooxygenase-2)","Central prostaglandin pathways":"central prostaglandin pathways","COX-2":"COX-2 (cyclooxygenase-2)","URAT1 및 renal organic anion transporters":"URAT1 (urate transporter 1) 및 renal organic anion transporters"};
 drugs.forEach(d=>{if(targetDisplayMap[d[2]])d[2]=targetDisplayMap[d[2]];});
 function targetKey(v){return normalizeText(v);}
-const APP_VERSION="20261008.11";
+const APP_VERSION="20261008.12";
 const APP_VERSION_KEY="pharmAppVersionV1";
 const APP_RELOAD_KEY="pharmAppReloadV1";
 const APP_CACHE_PREFIX="pharmApp-";
@@ -87,10 +87,17 @@ const stageNames=["① 구조 → 일반명","② 구조 → 약물표적","③ 
 function readLocalJSON(name,fallback){try{const raw=localStorage.getItem(name);return raw===null?fallback:JSON.parse(raw)}catch(e){console.warn("저장 데이터 복원 실패:",name,e);return fallback}}
 const savedKey="pharmSavedRecallV1", starredKey="pharmStarredDrugsV1", layoutKey="pharmQuizLayoutV1";
 let quizLayout=readLocalJSON(layoutKey,"below")==="side"?"side":"below";
-let state=readLocalJSON(key,{}), saved=readLocalJSON(savedKey,[]).filter(x=>x&&x.stage>=1&&x.stage<=6), starred=[...new Set(readLocalJSON(starredKey,[]).filter(x=>typeof x==="string"&&x))], currentGroup=null,currentStage=1,pool=[],qi=0,answered=false,retryQueue=[],learningLoop=false;
-function save(){localStorage.setItem(key,JSON.stringify(state));renderChapters()}
-function saveSaved(){localStorage.setItem(savedKey,JSON.stringify(saved))}
-function saveStarred(){localStorage.setItem(starredKey,JSON.stringify(starred))}
+const storedState=readLocalJSON(key,{});
+const storedSaved=readLocalJSON(savedKey,[]);
+const storedStarred=readLocalJSON(starredKey,[]);
+let state=(storedState&&typeof storedState==="object"&&!Array.isArray(storedState))?storedState:{};
+let saved=Array.isArray(storedSaved)?storedSaved.filter(x=>x&&typeof x==="object"&&x.stage>=1&&x.stage<=6):[];
+let starred=[...new Set(Array.isArray(storedStarred)?storedStarred.filter(x=>typeof x==="string"&&x):[])];
+let currentGroup=null,currentStage=1,pool=[],qi=0,answered=false,retryQueue=[],learningLoop=false;
+function safeStorageSet(storage,name,value){try{storage.setItem(name,value);return true}catch(e){console.warn("저장소 기록 실패:",name,e);return false}}
+function save(){safeStorageSet(localStorage,key,JSON.stringify(state));renderChapters()}
+function saveSaved(){safeStorageSet(localStorage,savedKey,JSON.stringify(saved))}
+function saveStarred(){safeStorageSet(localStorage,starredKey,JSON.stringify(starred))}
 function isStarred(name){return starred.includes(name)}
 function toggleStarred(name){const i=starred.indexOf(name);if(i>=0)starred.splice(i,1);else starred.push(name);saveStarred();renderFlashcards();renderStarred()}
 function isSaved(name,stage){return saved.some(x=>x.name===name&&x.stage===stage)}
@@ -413,7 +420,26 @@ function openReview(n,stage){
   if(currentStage<1||currentStage>6){currentStage=1}
   pool=[n];qi=0;answered=false;show("quiz");drawQuestion()
 }
-function migrateStageHistory(){let changed=false;Object.keys(state).forEach(function(name){const r=state[name];if(!r||!r.stage)return;const old9=r.stage[9];if(old9){r.stage[6]=old9;delete r.stage[9];changed=true}Object.keys(r.stage).forEach(function(k){if(!r.stage[k]){delete r.stage[k];changed=true}});state[name]=r});const filteredSaved=saved.filter(function(x){return x.stage>=1&&x.stage<=6});if(filteredSaved.length!==saved.length){saved=filteredSaved;changed=true}if(changed){localStorage.setItem(key,JSON.stringify(state));localStorage.setItem(savedKey,JSON.stringify(saved))}}
+function migrateStageHistory(){
+  let changed=false;
+  Object.keys(state).forEach(function(name){
+    const r=state[name];
+    if(!r||typeof r!=="object"||Array.isArray(r)){delete state[name];changed=true;return}
+    if(!r.stage||typeof r.stage!=="object"||Array.isArray(r.stage)){r.stage={};changed=true}
+    const old9=r.stage[9];
+    if(old9){r.stage[6]=old9;delete r.stage[9];changed=true}
+    Object.keys(r.stage).forEach(function(k){
+      if(!r.stage[k]||typeof r.stage[k]!=="object"){delete r.stage[k];changed=true}
+    });
+    state[name]=r
+  });
+  const filteredSaved=saved.filter(function(x){return x&&typeof x==="object"&&x.stage>=1&&x.stage<=6});
+  if(filteredSaved.length!==saved.length){saved=filteredSaved;changed=true}
+  if(changed){
+    safeStorageSet(localStorage,key,JSON.stringify(state));
+    safeStorageSet(localStorage,savedKey,JSON.stringify(saved))
+  }
+}
 let egg=0;function eggClick(){document.getElementById("modal").classList.add("show")}function closeEgg(){document.getElementById("modal").classList.remove("show")}
 function validateTargetOptions(){const vals=drugs.map(d=>d[2]);const dup=vals.filter((v,i,a)=>a.findIndex(x=>targetKey(x)===targetKey(v))!==i);if(dup.length)console.warn("약물표적 중복 표현이 정규화되지 않았습니다.",[...new Set(dup)]);return !dup.length}
 function validateQuestionData(){const m=new Map(drugs.map(d=>[d[0],d]));const e=[];groups.forEach(g=>g.names.forEach(n=>{const d=m.get(n);if(!d)e.push(g.id+" · "+n+" 데이터 없음");else if(d.length<5)e.push(n+" 데이터 필드 부족")}));if(e.length)console.error("학습 데이터 검증 실패",e);return !e.length}
@@ -428,11 +454,11 @@ function validateChapterGroups(){
     if(dup.length){console.error("Duplicate drug in "+g.id,dup);ok=false}
   });
   return ok
-}migrateStageHistory();
-renderChapters();
-renderStarred();
-updateExamCountdown();
-setInterval(updateExamCountdown,60000);
+}try{migrateStageHistory()}catch(e){console.error("학습 기록 복원 실패:",e);state={};saved=[]}
+try{renderChapters()}catch(e){console.error("Chapter 목록 렌더링 실패:",e);const el=document.getElementById("chapterGrid");if(el)el.innerHTML='<div class="card"><b>Chapter 목록을 불러오지 못했습니다.</b><p class="muted">페이지를 새로고침해 주세요.</p></div>'}
+try{renderStarred()}catch(e){console.error("암기 목록 렌더링 실패:",e)}
+try{updateExamCountdown()}catch(e){console.error("시험 카운트다운 초기화 실패:",e)}
+setInterval(()=>{try{updateExamCountdown()}catch(e){console.error("시험 카운트다운 갱신 실패:",e)}},60000);
 window.onpopstate=()=>{show("home")};
-setTimeout(prepareLearningData,1000);
+setTimeout(()=>{try{prepareLearningData()}catch(e){console.error("학습 데이터 준비 실패:",e)}},1000);
 document.addEventListener("click",function(e){const t=e.target;if(t&&t.tagName==="IMG"&&t.closest(".structure")&&!t.closest(".image-zoom-modal"))openImageZoom(t.src,t.alt)});document.addEventListener("keydown",function(e){if(e.key==="Escape")closeImageZoom()});</script></body></html>
