@@ -70,7 +70,7 @@ const groups=[{"id":"18","title":"강심제 · 협심증 · 부정맥 치료제"
 const targetDisplayMap={"β1-adrenergic receptor":"β1-AR (β1-adrenergic receptor)","Voltage-gated Na+ channel":"VGSC (voltage-gated sodium channel)","NO–cGMP pathway / soluble guanylyl cyclase":"sGC (soluble guanylyl cyclase) / NO–cGMP pathway","Carbonic anhydrase":"CA (carbonic anhydrase)","NCC (Na+/Cl− cotransporter)":"NCC (Na+/Cl− cotransporter)","NKCC2 (Na+/K+/2Cl− cotransporter)":"NKCC2 (Na+/K+/2Cl− cotransporter 2)","NKCC2":"NKCC2 (Na+/K+/2Cl− cotransporter 2)","ENaC":"ENaC (epithelial sodium channel)","ACE":"ACE (angiotensin-converting enzyme)","AT1 receptor":"AT1R (angiotensin II type 1 receptor)","L-type Ca2+ channel":"LTCC (L-type voltage-gated calcium channel)","ATP-sensitive K+ channel":"KATP channel (ATP-sensitive potassium channel)","β1/β2 + α1 adrenergic receptors":"β1/β2-AR + α1-AR (β1/β2- and α1-adrenergic receptors)","HMG-CoA reductase":"HMG-CoA reductase (3-hydroxy-3-methylglutaryl-coenzyme A reductase)","NPC1L1":"NPC1L1 (NPC1-like intracellular cholesterol transporter 1)","PPARα":"PPARα (peroxisome proliferator-activated receptor alpha)","GPR109A (HM74A)":"GPR109A/HM74A (G protein-coupled receptor 109A)","Vitamin K epoxide reductase (VKORC1)":"VKORC1 (vitamin K epoxide reductase complex subunit 1)","Thrombin (factor IIa)":"thrombin (factor IIa)","P2Y12 ADP receptor":"P2Y12 receptor (P2Y12 ADP receptor)","PDE3":"PDE3 (phosphodiesterase 3)","PDE + ENT":"PDEs + ENTs (phosphodiesterases + equilibrative nucleoside transporters)","GPIIb/IIIa integrin":"GPIIb/IIIa (glycoprotein IIb/IIIa integrin)","Sulfonylurea receptor / KATP channel":"SUR1/KATP channel (sulfonylurea receptor 1 / ATP-sensitive potassium channel)","KATP channel (SUR1)":"SUR1/KATP channel (sulfonylurea receptor 1 / ATP-sensitive potassium channel)","PPARγ":"PPARγ (peroxisome proliferator-activated receptor gamma)","Mitochondrial complex I / AMPK-related pathways":"mitochondrial complex I / AMPK (AMP-activated protein kinase)-related pathways","DPP-4":"DPP-4 (dipeptidyl peptidase 4)","Intestinal α-glucosidases":"intestinal α-glucosidases (α-glucosidase enzymes)","SGLT2":"SGLT2 (sodium-glucose cotransporter 2)","Glucocorticoid receptor":"GR (glucocorticoid receptor)","Estrogen receptor ERα/ERβ":"ERα/ERβ (estrogen receptors alpha/beta)","Androgen receptor":"AR (androgen receptor)","Estrogen receptor":"ER (estrogen receptor)","Aromatase (CYP19A1)":"CYP19A1 (aromatase)","5α-reductase type 2":"5α-reductase type 2 (SRD5A2)","Thyroid hormone receptor":"TR (thyroid hormone receptor)","Thyroid peroxidase":"TPO (thyroid peroxidase)","Thyroid peroxidase; peripheral 5'-deiodinase":"TPO (thyroid peroxidase); peripheral 5′-deiodinase","Hydroxyapatite / osteoclast pathway":"hydroxyapatite / osteoclast pathway","FPP synthase in osteoclasts":"FPPS (farnesyl pyrophosphate synthase) in osteoclasts","COX-1/COX-2":"COX-1/COX-2 (cyclooxygenase-1/cyclooxygenase-2)","Central prostaglandin pathways":"central prostaglandin pathways","COX-2":"COX-2 (cyclooxygenase-2)","URAT1 및 renal organic anion transporters":"URAT1 (urate transporter 1) 및 renal organic anion transporters"};
 drugs.forEach(d=>{if(targetDisplayMap[d[2]])d[2]=targetDisplayMap[d[2]];});
 function targetKey(v){return normalizeText(v);}
-const APP_VERSION="20261008.21";
+const APP_VERSION="20261008.22";
 const APP_VERSION_KEY="pharmAppVersionV1";
 const APP_RELOAD_KEY="pharmAppReloadV1";
 const APP_CACHE_PREFIX="pharmApp-";
@@ -83,11 +83,35 @@ function clearAppCaches(){
 }
 
 
-const VERSION_CHECK_URL="version.json";
+const VERSION_CHECK_URL="./version.json";
 let latestAppVersion=APP_VERSION;
 let versionCheckState="checking";
 function setVersionStatus(state,text,title){const el=document.getElementById("appVersionStatus");if(!el)return;el.className="app-version-status "+state;el.textContent=text;el.title=title||text}
-async function checkLatestVersion(){setVersionStatus("","🔄 버전 확인 중…","최신 버전을 확인하고 있습니다.");try{const res=await fetch(VERSION_CHECK_URL+"?t="+Date.now(),{cache:"no-store",headers:{"Cache-Control":"no-cache"}});if(!res.ok)throw new Error("HTTP "+res.status);const data=await res.json();if(!data||typeof data.version!=="string"||!data.version.trim())throw new Error("invalid version");latestAppVersion=data.version.trim();if(latestAppVersion===APP_VERSION){versionCheckState="latest";setVersionStatus("latest","🟢 최신 버전 · v"+APP_VERSION,"현재 최신 버전입니다.");}else{versionCheckState="update";setVersionStatus("update","🟠 새 버전 있음 · 새로고침","새 버전 "+latestAppVersion+"이 있습니다. 클릭하면 새로고침합니다.");}}catch(e){versionCheckState="error";setVersionStatus("error","⚪ 버전 확인 불가","버전 확인에 실패했습니다. 잠시 후 다시 확인할 수 있습니다.");console.warn("최신 버전 확인 실패:",e)}return versionCheckState}
+async function checkLatestVersion(){
+  setVersionStatus("","🔄 버전 확인 중…","최신 버전을 확인하고 있습니다.");
+  try{
+    const url=new URL(VERSION_CHECK_URL,location.href);
+    url.searchParams.set("v",Date.now().toString());
+    const res=await fetch(url.toString(),{cache:"no-store",credentials:"same-origin"});
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    const data=await res.json();
+    const remote=typeof data?.version==="string"?data.version.trim():"";
+    if(!remote)throw new Error("invalid version");
+    latestAppVersion=remote;
+    if(remote===APP_VERSION){
+      versionCheckState="latest";
+      setVersionStatus("latest","🟢 최신 버전 · v"+APP_VERSION,"현재 최신 버전입니다.");
+    }else{
+      versionCheckState="update";
+      setVersionStatus("update","🟠 새 버전 있음 · 새로고침","현재 v"+APP_VERSION+" / 최신 v"+remote+" · 클릭하면 새로고침합니다.");
+    }
+  }catch(e){
+    versionCheckState="error";
+    setVersionStatus("error","⚪ 버전 확인 불가","버전 확인에 실패했습니다. 클릭해서 다시 확인할 수 있습니다.");
+    console.warn("최신 버전 확인 실패:",e);
+  }
+  return versionCheckState;
+}
 function reloadForLatest(){const u=new URL(location.href);u.searchParams.set("refresh",Date.now().toString());location.replace(u.toString())}
 function handleVersionStatusClick(){if(versionCheckState==="update"){reloadForLatest();return}if(versionCheckState==="error"||versionCheckState==="latest")checkLatestVersion()}
 function applyAppVersion(){
