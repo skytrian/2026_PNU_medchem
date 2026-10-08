@@ -46,7 +46,7 @@ const groups=[{"id":"18","title":"강심제 · 협심증 · 부정맥 치료제"
 const targetDisplayMap={"β1-adrenergic receptor":"β1-AR (β1-adrenergic receptor)","Voltage-gated Na+ channel":"VGSC (voltage-gated sodium channel)","NO–cGMP pathway / soluble guanylyl cyclase":"sGC (soluble guanylyl cyclase) / NO–cGMP pathway","Carbonic anhydrase":"CA (carbonic anhydrase)","NCC (Na+/Cl− cotransporter)":"NCC (Na+/Cl− cotransporter)","NKCC2 (Na+/K+/2Cl− cotransporter)":"NKCC2 (Na+/K+/2Cl− cotransporter 2)","NKCC2":"NKCC2 (Na+/K+/2Cl− cotransporter 2)","ENaC":"ENaC (epithelial sodium channel)","ACE":"ACE (angiotensin-converting enzyme)","AT1 receptor":"AT1R (angiotensin II type 1 receptor)","L-type Ca2+ channel":"LTCC (L-type voltage-gated calcium channel)","ATP-sensitive K+ channel":"KATP channel (ATP-sensitive potassium channel)","β1/β2 + α1 adrenergic receptors":"β1/β2-AR + α1-AR (β1/β2- and α1-adrenergic receptors)","HMG-CoA reductase":"HMG-CoA reductase (3-hydroxy-3-methylglutaryl-coenzyme A reductase)","NPC1L1":"NPC1L1 (NPC1-like intracellular cholesterol transporter 1)","PPARα":"PPARα (peroxisome proliferator-activated receptor alpha)","GPR109A (HM74A)":"GPR109A/HM74A (G protein-coupled receptor 109A)","Vitamin K epoxide reductase (VKORC1)":"VKORC1 (vitamin K epoxide reductase complex subunit 1)","Thrombin (factor IIa)":"thrombin (factor IIa)","P2Y12 ADP receptor":"P2Y12 receptor (P2Y12 ADP receptor)","PDE3":"PDE3 (phosphodiesterase 3)","PDE + ENT":"PDEs + ENTs (phosphodiesterases + equilibrative nucleoside transporters)","GPIIb/IIIa integrin":"GPIIb/IIIa (glycoprotein IIb/IIIa integrin)","Sulfonylurea receptor / KATP channel":"SUR1/KATP channel (sulfonylurea receptor 1 / ATP-sensitive potassium channel)","KATP channel (SUR1)":"SUR1/KATP channel (sulfonylurea receptor 1 / ATP-sensitive potassium channel)","PPARγ":"PPARγ (peroxisome proliferator-activated receptor gamma)","Mitochondrial complex I / AMPK-related pathways":"mitochondrial complex I / AMPK (AMP-activated protein kinase)-related pathways","DPP-4":"DPP-4 (dipeptidyl peptidase 4)","Intestinal α-glucosidases":"intestinal α-glucosidases (α-glucosidase enzymes)","SGLT2":"SGLT2 (sodium-glucose cotransporter 2)","Glucocorticoid receptor":"GR (glucocorticoid receptor)","Estrogen receptor ERα/ERβ":"ERα/ERβ (estrogen receptors alpha/beta)","Androgen receptor":"AR (androgen receptor)","Estrogen receptor":"ER (estrogen receptor)","Aromatase (CYP19A1)":"CYP19A1 (aromatase)","5α-reductase type 2":"5α-reductase type 2 (SRD5A2)","Thyroid hormone receptor":"TR (thyroid hormone receptor)","Thyroid peroxidase":"TPO (thyroid peroxidase)","Thyroid peroxidase; peripheral 5'-deiodinase":"TPO (thyroid peroxidase); peripheral 5′-deiodinase","Hydroxyapatite / osteoclast pathway":"hydroxyapatite / osteoclast pathway","FPP synthase in osteoclasts":"FPPS (farnesyl pyrophosphate synthase) in osteoclasts","COX-1/COX-2":"COX-1/COX-2 (cyclooxygenase-1/cyclooxygenase-2)","Central prostaglandin pathways":"central prostaglandin pathways","COX-2":"COX-2 (cyclooxygenase-2)","URAT1 및 renal organic anion transporters":"URAT1 (urate transporter 1) 및 renal organic anion transporters"};
 drugs.forEach(d=>{if(targetDisplayMap[d[2]])d[2]=targetDisplayMap[d[2]];});
 function targetKey(v){return normalizeText(v);}
-const APP_VERSION="20261008.10";
+const APP_VERSION="20261008.11";
 const APP_VERSION_KEY="pharmAppVersionV1";
 const APP_RELOAD_KEY="pharmAppReloadV1";
 const APP_CACHE_PREFIX="pharmApp-";
@@ -68,18 +68,19 @@ function applyAppVersion(){
     // 앱 전용 Cache Storage만 정리합니다.
     clearAppCaches();
   }
-  if(sessionStorage.getItem(APP_RELOAD_KEY)!=="1"){
-    const url=new URL(window.location.href);
-    if(url.searchParams.get("v")!==APP_VERSION){
-      sessionStorage.setItem(APP_RELOAD_KEY,"1");
-      url.searchParams.set("v",APP_VERSION);
-      window.location.replace(url.toString());
-      return false;
-    }
+  const url=new URL(window.location.href);
+  if(url.searchParams.get("v")!==APP_VERSION){
+    // 강제 예외(throw)로 스크립트를 중단하지 않고 버전 URL로 한 번만 이동합니다.
+    // 이동이 지연되거나 브라우저가 이동을 처리하는 동안에도 기존 페이지가 깨지지 않도록 합니다.
+    sessionStorage.setItem(APP_RELOAD_KEY,"1");
+    url.searchParams.set("v",APP_VERSION);
+    window.location.replace(url.toString());
+  }else{
+    sessionStorage.removeItem(APP_RELOAD_KEY);
   }
   return true;
 }
-if(!applyAppVersion()) throw new Error("Reloading updated app…");
+applyAppVersion();
 maybeShowUsage();
 
 const stageNames=["① 구조 → 일반명","② 구조 → 약물표적","③ 구조 → MOA","④ 구조 → 용도","⑤ 1:3 종합 매칭","⑥ 구조 → 약물명 타이핑"]; const stageDesc=["구조를 보고 4개의 일반명 중 정답을 고릅니다.","구조를 보고 4개의 약물표적 중 정답을 고릅니다.","구조를 보고 4개의 핵심 작용양식(MOA) 중 정답을 고릅니다.","구조를 보고 서로 겹치지 않도록 구성된 4개의 대표 용도 중 정답을 고릅니다.","하나의 구조를 보고 일반명·용도·MOA를 각각 선택합니다. 세 항목을 모두 맞혀야 정답입니다.","구조를 보고 약물의 일반명을 직접 입력합니다. 대소문자와 불필요한 공백·하이픈 차이는 구별하지 않습니다."]; const key="pharmChapterRecallV6";
@@ -416,7 +417,18 @@ function migrateStageHistory(){let changed=false;Object.keys(state).forEach(func
 let egg=0;function eggClick(){document.getElementById("modal").classList.add("show")}function closeEgg(){document.getElementById("modal").classList.remove("show")}
 function validateTargetOptions(){const vals=drugs.map(d=>d[2]);const dup=vals.filter((v,i,a)=>a.findIndex(x=>targetKey(x)===targetKey(v))!==i);if(dup.length)console.warn("약물표적 중복 표현이 정규화되지 않았습니다.",[...new Set(dup)]);return !dup.length}
 function validateQuestionData(){const m=new Map(drugs.map(d=>[d[0],d]));const e=[];groups.forEach(g=>g.names.forEach(n=>{const d=m.get(n);if(!d)e.push(g.id+" · "+n+" 데이터 없음");else if(d.length<5)e.push(n+" 데이터 필드 부족")}));if(e.length)console.error("학습 데이터 검증 실패",e);return !e.length}
-function validateChapterGroups(){const a=groups.find(g=>g.id==="25")?.names||[],b=groups.find(g=>g.id==="26")?.names||[],overlap=a.filter(n=>b.includes(n));if(overlap.length)throw new Error("Chapter 25/26 overlap: "+overlap.join(", "));groups.forEach(g=>{if(new Set(g.names).size!==g.names.length)throw new Error("Duplicate drug in "+g.id)});return true}migrateStageHistory();
+function validateChapterGroups(){
+  const a=groups.find(g=>g.id==="25")?.names||[],
+        b=groups.find(g=>g.id==="26")?.names||[],
+        overlap=a.filter(n=>b.includes(n));
+  let ok=true;
+  if(overlap.length){console.error("Chapter 25/26 overlap:",overlap);ok=false}
+  groups.forEach(g=>{
+    const dup=[...new Set(g.names.filter((n,i)=>g.names.indexOf(n)!==i))];
+    if(dup.length){console.error("Duplicate drug in "+g.id,dup);ok=false}
+  });
+  return ok
+}migrateStageHistory();
 renderChapters();
 renderStarred();
 updateExamCountdown();
